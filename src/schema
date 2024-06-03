@@ -1,0 +1,55 @@
+import {sql} from "drizzle-orm";
+import {
+    int,
+    mysqlEnum,
+    mysqlTable,
+    varchar,
+    bigint,
+    char,
+    datetime,
+    float,
+} from "drizzle-orm/mysql-core";
+
+function snowflake<TName extends string>(name: TName) {
+    return bigint(name, {mode: "bigint", unsigned: true});
+}
+
+export const discordUsers = mysqlTable("discord_user", {
+    id: snowflake("id").primaryKey(),
+    username: varchar("username", {length: 32}).notNull(),
+});
+
+export const mappers = mysqlTable("mapper", {
+    id: int("id").primaryKey(),
+    username: varchar("username", {length: 32}).notNull(),
+    avatarUrl: varchar("avatar_url", {length: 255}).notNull(),
+    rarity: int("rarity").notNull(),
+});
+
+export const cardConditions = mysqlTable("card_condition", {
+    id: varchar("id", {length: 20}).primaryKey(),
+    multiplier: float("multiplier").notNull(),
+});
+
+export const cards = mysqlTable("card", {
+    id: char("id", {length: 4}).primaryKey(),
+    mapperId: int("mapper_id")
+        .notNull()
+        .references(() => mappers.id),
+    ownerId: snowflake("owner_id").references(() => discordUsers.id),
+    claimedById: snowflake("claimed_by_id").references(() => discordUsers.id),
+    droppedById: snowflake("dropped_by_id").references(() => discordUsers.id),
+    username: varchar("username", {length: 32}).notNull(),
+    avatarUrl: varchar("avatar_url", {length: 255}).notNull(),
+    createdAt: datetime("created_at", {
+        fsp: 6,
+    }).$default(() => sql`CURRENT_TIMESTAMP(6)`),
+    condition: varchar("condition", {length: 20})
+        .notNull()
+        .references(() => cardConditions.id),
+});
+export const commandTimeouts = mysqlTable("command_timeout", {
+    userId: snowflake("user_id").primaryKey().references(() => discordUsers.id),
+    command: mysqlEnum("command", ["DROP", "CLAIM"]).notNull(),
+    lastUsed: datetime("last_used", {fsp: 6}).notNull(),
+})

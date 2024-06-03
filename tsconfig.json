@@ -1,0 +1,10 @@
+{
+	"extends": ["@sapphire/ts-config", "@sapphire/ts-config", "@sapphire/ts-config/decorators"],
+	"compilerOptions": {
+		"outDir": "./dist/",
+		"skipLibCheck": true,
+		"emitDecoratorMetadata": false,
+		"experimentalDecorators": true
+	},
+	"include": ["src/**/*.ts"]
+}

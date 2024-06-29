@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import { v4 as uuid } from 'uuid';
 import { Card } from '../entities/card.js';
 import { Mapper } from '../entities/mapper.js';
+import { GIF } from './GIF.js';
+import { exec } from 'child_process';
 
 const fontPath = import.meta.resolve('@expo-google-fonts/nunito-sans/').slice('file:///'.length);
 
@@ -29,6 +31,95 @@ interface Options {
 }
 
 export async function renderCard(card: Card, options: Options = {}) {
+	try {
+		if (card.mapper.avatarUrl.endsWith('.gif')) {
+			console.log('loading gif')
+			const gif = GIF();
+			gif.load(card.mapper.avatarUrl);
+			await new Promise<void>((resolve, reject) => {
+				gif.onload = () => {
+					resolve();
+				};
+				gif.onerror = (e) => {
+					reject(e);
+				};
+				setTimeout(() => reject(), 1000)
+			});
+
+			console.log('loaded gif')
+
+			let images: string[] = [];
+
+			const outputDir = path.resolve(tmpdir, uuid());
+			fs.mkdirSync(outputDir, { recursive: true });
+
+			const avgFrameDelay = gif.frames.reduce((acc, frame) => acc + (frame as { delay: number }).delay, 0) / gif.frames.length;
+			const fps = Math.round(1000 / avgFrameDelay);
+			console.log({ fps, frames: gif.frames.length });
+
+			if(gif.frameCount > 50) throw new Error('GIF too long');
+			if(gif.frameCount === 1) throw new Error('GIF too short');
+
+			let i = 0;
+			for (const frame of gif.frames) {
+				const canvas = createCanvas(paddedCardSize.width, paddedCardSize.height);
+				const ctx = canvas.getContext('2d');
+
+				await drawCard(ctx, card, options);
+
+				ctx.save();
+				ctx.translate(20, 20);
+
+				ctx.save();
+				ctx.beginPath();
+				ctx.roundRect(0, 0, 256, 256 - 2, [4, 4, 0, 0]);
+				ctx.clip();
+				ctx.drawImage((frame as any).image, 0, 0, 256, 256);
+				ctx.restore();
+
+				ctx.restore();
+
+				const imagePath = path.resolve(outputDir, i++ + '.png');
+				const stream = canvas.createPNGStream();
+				const out = fs.createWriteStream(imagePath, { flags: 'a' });
+
+				stream.pipe(out);
+
+				await new Promise((resolve, reject) => {
+					out.on('finish', resolve);
+					out.on('error', reject);
+				});
+
+				images.push(imagePath);
+			}
+
+			const outputPath = path.resolve(tmpdir, uuid() + '.gif');
+			await new Promise<void>((resolve, reject) => {
+				exec(`ffmpeg -framerate ${fps} -i ${outputDir}/%d.png -vf palettegen ${outputDir}/palette.png`, (err) => {
+					if (err) {
+						reject(err);
+					} else {
+						exec(
+							`ffmpeg -framerate ${fps} -i ${outputDir}/%d.png -i ${outputDir}/palette.png -lavfi paletteuse -y ${outputPath}`,
+							(err) => {
+								if (err) {
+									reject(err);
+								} else {
+									resolve();
+								}
+							}
+						);
+					}
+				});
+			});
+
+			return outputPath;
+		}
+	} catch (e) {
+		console.error(e);
+		// fallback to static image
+	}
+
 	const canvas = createCanvas(paddedCardSize.width, paddedCardSize.height);
 
 	const ctx = canvas.getContext('2d');
@@ -125,11 +216,11 @@ export async function drawCard(ctx: CanvasRenderingContext2D, card: Card, option
 		ctx.beginPath();
 		ctx.roundRect(0, 0, cardSize.width, cardSize.height, 4);
 		ctx.clip();
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'multiply';
+		ctx.globalAlpha = 1;
+		ctx.globalCompositeOperation = 'multiply';
 		const foil = await loadImage('assets/foil2.png');
 		ctx.drawImage(foil, 0, 0, cardSize.width, cardSize.height);
-        ctx.globalAlpha = 1;
+		ctx.globalAlpha = 1;
 	}
 
 	ctx.restore();

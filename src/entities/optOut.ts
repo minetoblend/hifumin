@@ -10,4 +10,10 @@ export class OptOut {
 
     @Column({type: 'text', nullable: true})
     reason?: string | null;
+
+    @Column({type: 'timestamp', default: () => 'CURRENT_TIMESTAMP'})
+    createdAt!: Date;
+
+    @Column({ type: 'varchar' , length: 32, nullable: true})
+    discordUsername?: string | null;
 }

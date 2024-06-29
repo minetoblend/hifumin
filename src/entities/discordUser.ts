@@ -8,4 +8,6 @@ export class DiscordUser {
     username!: string;
     @Column({type: 'boolean', default: false, nullable: false})
     reminderEnabled!: boolean;
+    @Column({type: 'boolean', default: false, nullable: false})
+    gamblingWarningShown!: boolean;
 }

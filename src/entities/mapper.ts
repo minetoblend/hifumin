@@ -5,7 +5,7 @@ import {WishlistEntry} from "./wishlistEntry.js";
 export class Mapper {
     @PrimaryColumn('int')
     id!: number;
-    @Column({type: 'varchar', length: 32, nullable: false})
+    @Column({type: 'varchar', length: 30, nullable: false})
     username!: string;
     @Column({type: 'varchar', length: 255, nullable: false})
     avatarUrl!: string;

@@ -9,6 +9,8 @@ import { Card } from '../entities/card.js';
 import { CardCondition } from '../entities/cardCondition.js';
 import { renderCards } from '../services/cardRenderer.js';
 import { DiscordUser } from '../entities/discordUser.js';
+import { getNextCardId } from '../services/getNextCardId.js';
+import { EventLogService } from '../services/eventLogService.js';
 
 export class UseCommand extends Command {
 	registerApplicationCommands(registry: ApplicationCommandRegistry) {
@@ -36,6 +38,8 @@ export class UseCommand extends Command {
 				}, 15000);
 				return;
 			}
+
+			EventLogService.logEvent(user, 'use', { item: itemId });
 
 			switch (itemId) {
 				case 'claim speedup':
@@ -71,8 +75,11 @@ export class UseCommand extends Command {
 					const msg = await interaction.reply({
 						content: `Item \`${itemId}\` cannot be used`
 					});
-					setTimeout(() => {
-						msg.delete();
+					setTimeout(async () => {
+						try {
+                            msg.delete();
+                        } catch(e) {
+                        }
 					}, 15000);
 					return;
 			}
@@ -116,12 +123,12 @@ export class UseCommand extends Command {
 
 		await db.manager.transaction('SERIALIZABLE', async (tx) => {
 			const repository = tx.getRepository(Card);
-			let nextId = await repository.count();
+			const ids = await getNextCardId(10)
 
 			for (const mapper of randomMappers) {
 				const condition = conditions[Math.floor(Math.random() * conditions.length)];
 				const card = new Card();
-				card.id = stringId(nextId++);
+				card.id = stringId(ids.shift()!);
 				card.mapper = mapper;
 				card.username = mapper.username;
 				card.avatarUrl = mapper.avatarUrl;
@@ -162,9 +169,11 @@ export class UseCommand extends Command {
 		});
 
 		setTimeout(async () => {
-			await message.edit({
-				components: []
-			});
+			try {
+                await message.edit({
+                    components: []
+                });
+            } catch(e) {}
 		}, 1000 * 60);
 	}
 }

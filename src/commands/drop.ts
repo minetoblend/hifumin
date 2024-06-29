@@ -1,163 +1,199 @@
-import {Command} from "@sapphire/framework";
-import {ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction} from "discord.js";
-import {DiscordUserService} from "../services/discordUserService.js";
-import '../services/cardRenderer.js'
-import {renderCards} from "../services/cardRenderer.js";
-import {db} from "../db.js";
-import {Mapper} from "../entities/mapper.js";
-import {Card} from "../entities/card.js";
-import {CardCondition} from "../entities/cardCondition.js";
-import {ApplyOptions} from "@sapphire/decorators";
-import {getTimeout, TimeoutType} from "../services/timeout.js";
+import { Command } from '@sapphire/framework';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, ChatInputCommandInteraction } from 'discord.js';
+import { DiscordUserService } from '../services/discordUserService.js';
+import '../services/cardRenderer.js';
+import { renderCards } from '../services/cardRenderer.js';
+import { db } from '../db.js';
+import { Mapper } from '../entities/mapper.js';
+import { Card } from '../entities/card.js';
+import { CardCondition } from '../entities/cardCondition.js';
+import { ApplyOptions } from '@sapphire/decorators';
+import { getTimeout, TimeoutType } from '../services/timeout.js';
+import { getNextCardId } from '../services/getNextCardId.js';
+import { GuildSettings } from '../entities/guildSettings.js';
+import { EventLogService } from '../services/eventLogService.js';
 
 @ApplyOptions<Command.Options>({
-    description: 'Drops 3 cards',
+	description: 'Drops 3 cards'
 })
 export class DropCommand extends Command {
-    public constructor(context: Command.LoaderContext, options: Command.Options) {
-        super(context, {...options});
-    }
+	public constructor(context: Command.LoaderContext, options: Command.Options) {
+		super(context, { ...options });
+	}
 
-    public override registerApplicationCommands(registry: Command.Registry) {
-        registry.registerChatInputCommand((builder) =>
-            builder.setName('drop').setDescription('Drops 3 cards')
-        )
-    }
+	public override registerApplicationCommands(registry: Command.Registry) {
+		registry.registerChatInputCommand((builder) => builder.setName('drop').setDescription('Drops 3 cards'));
+	}
 
+	override async chatInputRun(interaction: ChatInputCommandInteraction) {
+		const user = await DiscordUserService.findOrCreate(interaction.user);
 
-    override async chatInputRun(interaction: ChatInputCommandInteraction) {
-        const user = await DiscordUserService.findOrCreate(interaction.user)
+		const isTestChannel = interaction.channelId === '1206534692761894953';
 
-        const isTestChannel = interaction.channelId === '1206534692761894953'
+		const count = Math.random() < 0.05 ? 5 : 3;
 
-        await db.transaction('SERIALIZABLE', async tx => {
-            const ratelimit = await getTimeout(user, TimeoutType.Drop, tx)
-            if (ratelimit.expired && !isTestChannel) {
-                const duration = ratelimit.remainingTime > 60_000 ? `${Math.ceil(ratelimit.remainingTime / 60_000)} minutes` : `${Math.round(ratelimit.remainingTime / 1000)} seconds`;
-                await interaction.reply({
-                    content: `You need to wait ${duration} before dropping more cards!`,
-                });
-                return;
-            }
+		const randomMappers = await db
+			.getRepository(Mapper)
+			.createQueryBuilder('mapper')
+			.leftJoin('mapper.wishlistEntries', 'wishlistEntry', 'wishlistEntry.user.id = :userId', { userId: user.id })
+			.select()
+			.orderBy('-LOG(RAND()) / (1.0 - (rarity / 133.0 + CASE WHEN wishlistEntry.id is not null then 0.15 else 0 end))')
+			.limit(count)
+			.getMany();
 
-            const count = Math.random() < 0.05 ? 5 : 3
+		const ids = await getNextCardId(count);
 
+		const response = await interaction.deferReply();
 
-            const randomMappers = await tx
-                .getRepository(Mapper)
-                .createQueryBuilder('mapper')
-                .leftJoin('mapper.wishlistEntries', 'wishlistEntry',
-                    'wishlistEntry.user.id = :userId', {userId: user.id}
-                )
-                .select()
-                .orderBy('-LOG(RAND()) / (1.0 - (rarity / 133.0 + CASE WHEN wishlistEntry.id is not null then 0.15 else 0 end))')
-                .limit(count)
-                .getMany()
+		const cardResponse = await db.transaction(async (tx) => {
+			const ratelimit = await getTimeout(user, TimeoutType.Drop, tx);
+			if (ratelimit.expired && !isTestChannel) {
+				const duration =
+					ratelimit.remainingTime > 60_000
+						? `${Math.ceil(ratelimit.remainingTime / 60_000)} minutes`
+						: `${Math.round(ratelimit.remainingTime / 1000)} seconds`;
+				await response.edit({
+					content: `You need to wait ${duration} before dropping more cards!`
+				});
+				return;
+			}
 
-            const conditions = [
-                'BadlyDamaged',
-                'BadlyDamaged',
-                'Poor',
-                'Poor',
-                'Poor',
-                'Good',
-                'Good',
-                'Mint'
-            ]
+			const conditions = ['BadlyDamaged', 'BadlyDamaged', 'Poor', 'Poor', 'Poor', 'Good', 'Good', 'Mint'];
 
-            const cards: Card[] = []
+			const cards: Card[] = [];
 
-            const response = await interaction.deferReply()
+			const repository = tx.getRepository(Card);
 
+			for (const mapper of randomMappers) {
+				const condition = conditions[Math.floor(Math.random() * conditions.length)];
+				const card = new Card();
+				card.id = stringId(ids.shift()!);
+				card.mapper = mapper;
+				card.username = mapper.username;
+				card.avatarUrl = mapper.avatarUrl;
+				card.condition = (await db.getRepository(CardCondition).findOneBy({ id: condition }))!!;
+				card.droppedBy = user;
+				card.createdAt = new Date();
 
-            const repository = tx.getRepository(Card)
-            let nextId = await repository.count()
+				if (Math.random() < 0.05) card.foil = true;
 
-            for (const mapper of randomMappers) {
-                const condition = conditions[Math.floor(Math.random() * conditions.length)]
-                const card = new Card()
-                card.id = stringId(nextId++)
-                card.mapper = mapper
-                card.username = mapper.username
-                card.avatarUrl = mapper.avatarUrl
-                card.condition = (await tx.findOneBy(CardCondition, {id: condition}))!!
-                card.droppedBy = user
-                card.createdAt = new Date()
+				cards.push(card);
+			}
 
-                if(Math.random() < 0.05)
-                    card.foil = true
+			await repository.save(cards);
 
-                await repository.save(card)
+			EventLogService.logEvent(user, 'drop', { 
+				cards: cards.map((card) => {
+					return {
+						id: card.id,
+						mapper: card.mapper.username,
+					}
+				})
+			 });
 
-                cards.push(card)
-            }
+			const frame = await renderCards(cards);
 
-            const frame = await renderCards(cards)
+			const buttons = cards.map((card) => {
+				let name = card.mapper.username;
 
-            const buttons = cards.map(card => {
-                let name = card.mapper.username
+				if (card.attributes.length > 0) {
+					name += ' (Foil)';
+				}
 
-                if (card.attributes.length > 0) {
-                    name += ' (Foil)'
-                }
+				return new ButtonBuilder().setCustomId(`claim:${card.id}`).setLabel(name).setStyle(ButtonStyle.Primary);
+			});
 
-                return new ButtonBuilder()
-                    .setCustomId(`claim:${card.id}`)
-                    .setLabel(name)
-                    .setStyle(ButtonStyle.Primary)
-            })
+			const row = new ActionRowBuilder<ButtonBuilder>().addComponents(...buttons);
 
-            const row = new ActionRowBuilder<ButtonBuilder>()
-                .addComponents(...buttons)
+			if (!isTestChannel) await ratelimit.consume();
 
-            if(!isTestChannel)
-                await ratelimit.consume()
+			return {
+				content: `<@${user.id}> Dropping ${count} cards...`,
+				components: [row],
+				files: [
+					{
+						attachment: frame,
+						name: 'cards.png'
+					}
+				]
+			};
+		});
 
-            
+		if (cardResponse) {
+			const message = await response.edit(cardResponse);
 
-            const message = await response.edit({
-                content: `<@${user.id}> Dropping ${count} cards...`,
-                components: [row],
-                files: [{
-                    attachment: frame,
-                    name: 'cards.png'
-                }],
-            })
+			setTimeout(async () => {
+				try {
+					await message.edit({
+						components: []
+					});
+				} catch (e) {
+					console.error('Failed to remove components', e);
+				}
+			}, 1000 * 60);
 
-            setTimeout(async () => {
-                try {
-                    await message.edit({
-                        components: []
-                    })
-                } catch (e) {
-                    console.error('Failed to remove components', e)
-                }
-            }, 1000 * 60)
+			if (user.reminderEnabled) {
+				setTimeout(async () => {
+				    try {
+				        await interaction.user.send('Your drop is now off cooldown!')
+				    } catch (e) {
+				        console.error('Failed to send reminder', e)
+				    }
+				}, 1000 * 60 * 32)
+			}
+		}
 
-            if (user.reminderEnabled) {
-                // setTimeout(async () => {
-                //     try {
-                //         await interaction.user.send('Your drop is now off cooldown!')
-                //     } catch (e) {
-                //         console.error('Failed to send reminder', e)
-                //     }
-                // }, 1000 * 60 * 30)
-            }
-        })
+		try {
+			const guildId = interaction.guildId;
+			const channelId = interaction.channelId;
+			if (!guildId || !channelId || interaction.channel?.type !== ChannelType.GuildText) return;
 
+			db.transaction('SERIALIZABLE', async (tx) => {
+				let settings = await tx.getRepository(GuildSettings).findOneBy({ guildId });
+				if (!settings) {
+					settings = await tx.getRepository(GuildSettings).create({
+						guildId,
+						postedSettingsHint: false
+					});
+				}
 
+				if (!settings.postedSettingsHint && !settings.channelId) {
+					settings.postedSettingsHint = true;
+					await tx.getRepository(GuildSettings).save(settings);
 
-    }
+					const channel = await interaction.guild?.channels.fetch(channelId);
+
+					if (channel && channel.isTextBased() && channel.permissionsFor(interaction.client.user!)?.has('SendMessages')) {
+						console.log(`Posting settings hint for ${channel.guild.name}[${channel.guildId}]`);
+
+						await channel.send({
+							content: [
+								'**Hello, quick (single time) announcement!**',
+								'You can now set a dedicated bot channel for this bot with the `/settings setchannel` command.',
+								'The bot will automatically post updates about new features to that channel.',
+								'If the command does not show up, you might have to restart Discord (`Ctrl + R`)',
+								'You can also use `/changelog` at any time from now on to see the latest changes.'
+							].join('\n')
+						});
+					} else {
+						console.error('Failed to fetch channel');
+					}
+				}
+			});
+		} catch (e) {
+			console.error('Failed to post settings hint', e);
+		}
+	}
 }
 
 function stringId(id: number) {
-    let stringId = ''
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+	let stringId = '';
+	const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-    for (let i = 0; i < 4; i++) {
-        stringId += chars[id % chars.length]
-        id = Math.floor(id / chars.length)
-    }
+	for (let i = 0; i < 4; i++) {
+		stringId += chars[id % chars.length];
+		id = Math.floor(id / chars.length);
+	}
 
-    return stringId.split('').reverse().join('')
+	return stringId.split('').reverse().join('');
 }

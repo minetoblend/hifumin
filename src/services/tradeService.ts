@@ -1,4 +1,4 @@
-import {TradeOffer, TradeSession} from "../entities/tradeSession.js";
+import {TradeAccept, TradeOffer, TradeSession} from "../entities/tradeSession.js";
 import {DiscordUser} from "../entities/discordUser.js";
 import {db} from "../db.js";
 import {DataSource} from "typeorm";
@@ -9,7 +9,9 @@ import {ItemService} from "./itemService.js";
 
 export class TradeService {
 
-    static async startSession(user1: DiscordUser, user2: DiscordUser, confirmTrade?: () => Promise<boolean>): Promise<TradeSession | null> {
+    private static activeSessions = new Map<string, TradeSession>();
+
+    static async startSession(user1: DiscordUser, user2: DiscordUser, channelId: string, confirmTrade?: () => Promise<boolean>): Promise<TradeSession | null> {
         if (user1.id === user2.id) {
             throw new Error('Cannot trade with yourself');
         }
@@ -17,11 +19,11 @@ export class TradeService {
         return await db.transaction('SERIALIZABLE', async (tx) => {
             const repo = tx.getRepository(TradeSession)
 
-            if (await this.getActiveSession(user1, tx)) {
+            if (await this.getActiveSession(user1, channelId, tx)) {
                 throw new Error('You are already in a trade session');
             }
 
-            if (await this.getActiveSession(user2, tx)) {
+            if (await this.getActiveSession(user2,channelId, tx)) {
                 throw new Error('The other user is already in a trade session');
             }
 
@@ -38,23 +40,42 @@ export class TradeService {
         })
     }
 
-    static async getActiveSession(user: DiscordUser, tx: DataSource | EntityManager = db) {
+    static async getActiveSession(user: DiscordUser, channelId: string, tx: DataSource | EntityManager = db) {
         return tx.getRepository(TradeSession)
             .createQueryBuilder('trade_session')
             .leftJoinAndSelect('trade_session.user1', 'user1')
             .leftJoinAndSelect('trade_session.user2', 'user2')
             .leftJoinAndSelect('trade_session.offers', 'offers')
             .leftJoinAndSelect('offers.card', 'card')
+            .leftJoinAndSelect('offers.item', 'item')
             .leftJoinAndSelect('card.owner', 'owner')
+            .leftJoinAndSelect('offers.user', 'offerUser')
             .where('user1.id = :user_id OR user2.id = :user_id', {user_id: user.id})
+            .andWhere('trade_session.channelID = :channel_id', {channel_id: channelId})
+            .andWhere('trade_session.lastUpdated > DATE_SUB(NOW(), INTERVAL 10 MINUTE)')
             .getOne();
+    }
+
+    static async getAcceptedBy(session: TradeSession, tx: DataSource | EntityManager = db) {
+        const accepts = await tx.getRepository(TradeAccept).find({
+            where: {
+                tradeSession: session,
+                version: session.version,
+            },
+            relations: {
+                user: true,
+            }
+        })
+
+        return accepts.map(a => a.user);
     }
 
     static async cancelSession(
         user: DiscordUser,
+        channelId: string,
     ) {
         await db.transaction('SERIALIZABLE', async (tx) => {
-            const session = await this.getActiveSession(user, tx);
+            const session = await this.getActiveSession(user,channelId, tx);
             if (!session) {
                 throw new Error('No active trade session found');
             }
@@ -67,6 +88,7 @@ export class TradeService {
 
     static async addCard(
         user: DiscordUser,
+        channelId: string,
         cardId: string,
     ) {
         await db.transaction('SERIALIZABLE', async (tx) => {
@@ -83,7 +105,7 @@ export class TradeService {
                 throw new Error('You do not own this card');
             }
 
-            const session = await this.getActiveSession(user, tx);
+            const session = await this.getActiveSession(user, channelId, tx);
             if (!session) {
                 throw new Error('No active trade session found');
             }
@@ -119,6 +141,7 @@ export class TradeService {
 
     static async removeCard(
         user: DiscordUser,
+        channelId: string,
         card: Card,
     ) {
         await db.transaction('SERIALIZABLE', async (tx) => {
@@ -128,7 +151,7 @@ export class TradeService {
                 }
             }))!;
 
-            const session = await this.getActiveSession(user, tx);
+            const session = await this.getActiveSession(user, channelId, tx);
             if (!session) {
                 throw new Error('No active trade session found');
             }
@@ -151,6 +174,7 @@ export class TradeService {
 
     static async addItem(
         user: DiscordUser,
+        channelId: string,
         itemId: string,
         quantity: number,
     ) {
@@ -170,11 +194,7 @@ export class TradeService {
 
             const ownedItemCount = await ItemService.getItemCount(user, item.id, tx);
 
-            if (ownedItemCount < quantity) {
-                throw new Error('You do not have enough of this item');
-            }
-
-            const session = await this.getActiveSession(user, tx);
+            const session = await this.getActiveSession(user, channelId, tx);
             if (!session) {
                 throw new Error('No active trade session found');
             }
@@ -192,6 +212,10 @@ export class TradeService {
                         item: item,
                     },
                 });
+
+            if (ownedItemCount < quantity + (existing?.quantity ?? 0)) {
+                throw new Error('You do not have enough of this item');
+            }
 
             if (existing) {
                 await tx.getRepository(TradeOffer).update({
@@ -214,11 +238,12 @@ export class TradeService {
 
     static removeItem(
         user: DiscordUser,
+        channelId: string,
         item: InventoryItem,
         quantity?: number,
     ) {
         return db.transaction('SERIALIZABLE', async (tx) => {
-            const session = await this.getActiveSession(user, tx);
+            const session = await this.getActiveSession(user, channelId, tx);
             if (!session) {
                 throw new Error('No active trade session found');
             }

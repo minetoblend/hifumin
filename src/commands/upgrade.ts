@@ -39,7 +39,7 @@ export class UpgradeCommand extends Command {
                 where: {
                     id: cardId,
                 },
-                relations: ['owner', 'condition', 'condition.nextUpgrade', 'condition.previousUpgrade']
+                relations: ['mapper', 'owner', 'condition', 'condition.nextUpgrade', 'condition.previousUpgrade']
             });
         } else {
             card = await db.getRepository(Card).findOne({
@@ -51,7 +51,7 @@ export class UpgradeCommand extends Command {
                 order: {
                     createdAt: 'ASC'
                 },
-                relations: ['owner', 'condition', 'condition.nextUpgrade', 'condition.previousUpgrade']
+                relations: ['mapper', 'owner', 'condition', 'condition.nextUpgrade', 'condition.previousUpgrade']
             });
         }
 
@@ -72,7 +72,7 @@ export class UpgradeCommand extends Command {
             return;
         }
 
-        const upgradePrice = condition.upgradePrice;
+        const upgradePrice = condition.upgradePrice * (card.foil ? 2 : 1);
 
         const imagePath = await renderCard(card, {cardCode: true})
 

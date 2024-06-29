@@ -36,6 +36,8 @@ export class BurnCommand extends Command {
 
         const repository = db.getRepository(Card)
 
+        const response = await interaction.deferReply()
+
         let card: Card | null
         if (interaction.options.getString('card')) {
             card = await repository.findOne({
@@ -43,7 +45,11 @@ export class BurnCommand extends Command {
                     id: interaction.options.getString('card')!,
                     burned: false,
                 },
-                relations: ['owner', 'condition', 'mapper']
+                relations: {
+                    owner: true,
+                    condition: true,
+                    mapper: true,
+                }
             })
         } else {
             card = await repository.createQueryBuilder('card')
@@ -58,16 +64,17 @@ export class BurnCommand extends Command {
                 .getOne()
         }
         if (!card) {
-            await interaction.reply({
+            await response.edit({
                 content: 'Card not found!',
             });
             return;
         }
 
         if (card.owner?.id !== interaction.user.id) {
-            await interaction.reply({
+            await response.edit({
                 content: 'You do not own this card!',
             });
+            console.log("not owner")
             return;
         }
 
@@ -76,12 +83,17 @@ export class BurnCommand extends Command {
         const attachment = new AttachmentBuilder(imagePath)
             .setName('card.png')
 
+
+
+            
+
         const embed = new EmbedBuilder()
             .setTitle('Burn Card')
             .setDescription([
                 `<@${user.id}> you will receive:`,
                 '',
-                `:money_bag: **${card.burnValue}** gold`,
+                `:money_bag: **${card.burnValue}** \`gold\``,
+                `:sparkles: **${card.dustValue}** \`${card.dustType}\``,
             ].join('\n'))
             .addFields([
                 {
@@ -97,7 +109,7 @@ export class BurnCommand extends Command {
             ])
             .setThumbnail('attachment://card.png')
 
-        await interaction.reply({
+        await response.edit({
             files: [attachment],
             embeds: [embed],
             components: [

@@ -1,6 +1,6 @@
 import { ApplicationCommandRegistry, Command } from '@sapphire/framework';
 import { ChatInputCommandInteraction, ComponentType, EmbedBuilder, StringSelectMenuInteraction } from 'discord.js';
-import { PaginatedMessage } from '@sapphire/discord.js-utilities';
+import { LazyPaginatedMessage, PaginatedMessage } from '@sapphire/discord.js-utilities';
 import { DiscordUserService } from '../services/discordUserService.js';
 import { Card } from '../entities/card.js';
 import { db } from '../db.js';
@@ -29,10 +29,15 @@ export class CollectionCommand extends Command {
 			}
 		});
 
-		const message = new PaginatedMessage();
+		const message = new LazyPaginatedMessage();
 
 		let orderBy = 'card.createdAt';
 		let orderByReadable = 'date';
+
+		if(total === 0) {
+			await interaction.reply(`No cards found for ${user.username}`);
+			return;
+		}
 
 		for (let i = 0; i < total; i += 10) {
 			message.addAsyncPageBuilder(async (builder) => {

@@ -6,13 +6,22 @@ import '@sapphire/plugin-logger/register';
 import { setup } from '@skyra/env-utilities';
 import * as colorette from 'colorette';
 import { join } from 'node:path';
+import { srcDir } from './constants.js';
 import 'reflect-metadata'
 
 // Set default behavior to bulk overwrite
 ApplicationCommandRegistries.setDefaultBehaviorWhenNotIdentical(RegisterBehavior.BulkOverwrite);
 
 // Read env var
-setup({ path: join(process.cwd(), '.env') });
+setup({ path: join(srcDir, '.env') });
 
 // Enable colorette
 colorette.createColors({ useColor: true });
+
+process.on('uncaughtException', (error) => {
+  console.error(error);
+})
+
+process.on('unhandledRejection', (error) => {
+  console.error(error);
+})

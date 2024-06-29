@@ -35,7 +35,7 @@ export class ViewCommand extends Command {
             id,
             burned: false,
           },
-          relations: ['owner', 'condition']
+          relations: ['owner', 'condition', 'mapper']
         })
 
     if(!card || !card.owner) {
@@ -47,16 +47,17 @@ export class ViewCommand extends Command {
     }
 
     const file = await renderCard(card)
+    const attachmentFilename = file.endsWith('.gif') ? 'card.gif' : 'card.png'
 
     await interaction.reply(new MessageBuilder()
         .addFile(
             new AttachmentBuilder(file)
-                .setName('card.png'),
+                .setName(attachmentFilename),
         )
         .setEmbeds([
             new EmbedBuilder()
                 .setTitle(`\`${card.id}\` - ${card.mapper.username}`)
-                .setImage('attachment://card.png')
+                .setImage('attachment://' + attachmentFilename)
                 .addFields([
                   {
                     name: 'Owner',

@@ -38,7 +38,7 @@ export async function getTimeout(
                 }
             })
             if (effect && effect.activeUntil > new Date()) {
-                multiplier = 0.6666
+                multiplier = 0.5
             }
             break;
         }
@@ -88,7 +88,20 @@ export async function getTimeout(
                     duration = 60 * 10 * 1000
                     break;
                 case TimeoutType.Daily:
-                    duration = 60 * 60 * 24 * 1000
+                    // resets daily at 00:00
+
+                    const lastUsed = timeout.lastUsed
+                    lastUsed.setHours(0, 0, 0, 0)
+
+                    const now = new Date()
+                    now.setHours(0, 0, 0, 0)
+
+                    if(now.getTime() > lastUsed.getTime()) {
+                        return 0
+                    }
+
+                    return 24 * 60 * 60 * 1000 - (Date.now() - timeout.lastUsed.getTime())
+
                     break;
             }
 

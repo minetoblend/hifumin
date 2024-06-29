@@ -1,4 +1,4 @@
-import {Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn, VersionColumn} from "typeorm";
 import {DiscordUser} from "./discordUser.js";
 import {Card} from "./card.js";
 import {InventoryItem} from "./inventoryItem.js";
@@ -20,6 +20,15 @@ export class TradeSession {
         onDelete: 'CASCADE',
     })
     offers!: TradeOffer[]
+
+    @Column({ type: 'varchar', length: 20, nullable: false })
+    channelID!: string
+
+    @UpdateDateColumn({ type: 'datetime', nullable: false })
+    lastUpdated!: Date
+
+    @Column({ type: 'int', nullable: false, default: 0 })
+    version!: number
 }
 
 @Entity('trade_offer')
@@ -48,4 +57,22 @@ export class TradeOffer {
 
     @Column({type: 'int', nullable: false})
     quantity!: number
+}
+
+@Entity('trade_accept')
+export class TradeAccept {
+    @PrimaryGeneratedColumn('increment', {type: 'int'})
+    id!: number;
+
+    @ManyToOne(() => TradeSession, {nullable: false, onDelete: 'CASCADE'})
+    @JoinColumn({name: 'trade_session_id'})
+    tradeSession!: TradeSession
+
+    @ManyToOne(() => DiscordUser, {nullable: false})
+    @JoinColumn({name: 'user_id'})
+    user!: DiscordUser
+
+    @Column({ type: 'int', nullable: false })
+    @Index()
+    version!: number
 }

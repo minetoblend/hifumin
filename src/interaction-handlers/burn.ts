@@ -2,7 +2,8 @@ import {InteractionHandler, InteractionHandlerTypes} from '@sapphire/framework';
 import {ButtonInteraction, EmbedBuilder} from 'discord.js';
 import {db} from "../db.js";
 import {Card} from "../entities/card.js";
-import {InventoryEntry} from "../entities/inventoryEntry.js";
+import { ItemService } from '../services/itemService.js';
+import { DiscordUserService } from '../services/discordUserService.js';
 
 //import {DiscordUserService} from "../services/discordUserService.js";
 
@@ -18,7 +19,6 @@ export class BurnHandler extends InteractionHandler {
     public override parse(interaction: ButtonInteraction) {
         if (interaction.customId.startsWith('burn:')) {
             const [confirm, id] = interaction.customId.split(':').slice(1)
-            console.log({confirm, id})
             return this.some([confirm === 'confirm', id]);
         }
 
@@ -26,10 +26,12 @@ export class BurnHandler extends InteractionHandler {
     }
 
     public async run(interaction: ButtonInteraction, [confirm, id]: [boolean, string]) {
+        const user = await DiscordUserService.findOrCreate(interaction.user)
+
         await db.transaction('SERIALIZABLE', async (tx) => {
             const card = await tx.getRepository(Card).findOne({
                 where: {id, burned: false},
-                relations: ['owner', 'condition'],
+                relations: ['owner', 'condition', 'mapper'],
             })
 
             if (!card) {
@@ -73,30 +75,22 @@ export class BurnHandler extends InteractionHandler {
                     burned: true
                 })
 
-                await tx.getRepository(InventoryEntry)
-                    .createQueryBuilder()
-                    .insert()
-                    .into(InventoryEntry)
-                    .values({
-                        itemId: 'gold',
-                        userId: interaction.user.id,
-                        amount: 0,
-                    })
-                    .orIgnore()
-                    .execute()
+            
+                try {
 
-                await tx.getRepository(InventoryEntry)
-                    .update({
-                        itemId: 'gold',
-                        userId: interaction.user.id
-                    }, {
-                        amount: () => `amount + ${value}`
-                    })
+
+                await ItemService.changeItemCount(user, 'gold', value, tx)
+                await ItemService.changeItemCount(user, card.dustType, card.dustValue, tx)
 
                 await tx.getRepository(Card)
                     .update(card.id, {
                         burned: true
                     })
+
+                } catch(e) {
+                    console.error(e)
+                    throw e
+                }
 
                 await interaction.reply({
                     content: `You have burned your card for ${value} gold!`,

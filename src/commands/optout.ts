@@ -28,6 +28,7 @@ export class OptOutCommand extends Command {
         await db.getRepository(OptOut).insert({
             username: interaction.options.getString('username')!,
             reason: interaction.options.getString('reason') ?? null,
+            discordUsername: interaction.user.tag
         })
         await interaction.reply({
             content: 'You have been opted out. Please note that this is a manual process and will take a few hours to take effect.',

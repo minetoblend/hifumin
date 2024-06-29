@@ -8,7 +8,7 @@ export class Card {
     @PrimaryColumn('char', {length: 4})
     id!: string;
 
-    @ManyToOne(() => Mapper, {eager: true, nullable: false})
+    @ManyToOne(() => Mapper, {eager: false, nullable: false})
     @JoinColumn({name: 'mapper_id'})
     mapper!: Mapper;
 
@@ -24,7 +24,7 @@ export class Card {
     @JoinColumn({name: 'claimed_by_id'})
     claimedBy!: DiscordUser;
 
-    @Column({type: 'varchar', length: 32})
+    @Column({type: 'varchar', length: 30})
     username!: string;
 
     @Column({type: 'varchar', length: 255})
@@ -33,7 +33,7 @@ export class Card {
     @Column({type: 'datetime'})
     createdAt!: Date;
 
-    @ManyToOne(() => CardCondition, {eager: true, nullable: false})
+    @ManyToOne(() => CardCondition, {eager: false, nullable: false})
     @JoinColumn({name: 'condition'})
     condition!: CardCondition;
 
@@ -51,6 +51,19 @@ export class Card {
         }
 
         return Math.ceil(value);
+    }
+
+    get dustValue() {
+        return Math.ceil(this.mapper.rarity * 0.1)
+    }
+
+    get dustType(): string {
+        return {
+            'BadlyDamaged' : 'damaged dust',
+            'Poor' : 'poor dust',
+            'Good' : 'good dust',
+            'Mint' : 'mint dust',
+        }[this.condition.id]!
     }
 
     get attributes() {

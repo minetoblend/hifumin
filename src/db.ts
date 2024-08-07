@@ -22,12 +22,13 @@ function reportMissingEnv(name: string): never {
 }
 
 export const db = new DataSource({
-    type: "mysql",
-    host: process.env.MYSQL_HOST ?? reportMissingEnv("MYSQL_HOST"),
-    port: parseInt(process.env.MYSQL_PORT ?? reportMissingEnv("MYSQL_PORT")),
-    username: process.env.MYSQL_USER ?? reportMissingEnv("MYSQL_USER"),
-    password: process.env.MYSQL_PASSWORD ?? reportMissingEnv("MYSQL_PASSWORD"),
-    database: process.env.MYSQL_DATABASE ?? reportMissingEnv("MYSQL_DATABASE"),
+	type: "mysql",
+	host: process.env.MYSQL_HOST ?? reportMissingEnv("MYSQL_HOST"),
+	port: parseInt(process.env.MYSQL_PORT ?? reportMissingEnv("MYSQL_PORT")),
+	username: process.env.MYSQL_USER ?? reportMissingEnv("MYSQL_USER"),
+	password: process.env.MYSQL_PASSWORD ?? reportMissingEnv("MYSQL_PASSWORD"),
+	database: process.env.MYSQL_DATABASE ?? reportMissingEnv("MYSQL_DATABASE"),
+	timezone: '+02:00',
 	// synchronize: true,
 	// logging: true,
 	entities: [

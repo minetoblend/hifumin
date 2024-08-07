@@ -1,4 +1,4 @@
-import {Column, Entity, JoinColumn, ManyToOne, PrimaryColumn} from "typeorm";
+import {BeforeInsert, BeforeUpdate, Column, Entity, JoinColumn, ManyToOne, PrimaryColumn} from "typeorm";
 import {Mapper} from "./mapper.js";
 import {DiscordUser} from "./discordUser.js";
 import {CardCondition} from "./cardCondition.js";
@@ -43,14 +43,19 @@ export class Card {
     @Column('boolean', {default: false, nullable: false})
     foil!: boolean;
 
-    get burnValue() {
+    @Column('int', {name: 'burn_value', default: 0, nullable: false})
+    burnValue!: number;
+
+    @BeforeInsert()
+    @BeforeUpdate()
+    calculateBurnValue() {
         let value = this.mapper.rarity * this.condition.multiplier * 5
         
         if(this.foil) {
             value = value * 2;
         }
 
-        return Math.ceil(value);
+        this.burnValue = Math.ceil(value);
     }
 
     get dustValue() {

@@ -37,6 +37,7 @@ export class DropCommand extends Command {
 			.createQueryBuilder('mapper')
 			.leftJoin('mapper.wishlistEntries', 'wishlistEntry', 'wishlistEntry.user.id = :userId', { userId: user.id })
 			.select()
+			.where('mapper.deleted = false')
 			.orderBy('-LOG(RAND()) / (1.0 - (rarity / 133.0 + CASE WHEN wishlistEntry.id is not null then 0.15 else 0 end))')
 			.limit(count)
 			.getMany();

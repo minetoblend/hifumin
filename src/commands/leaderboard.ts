@@ -40,43 +40,30 @@ export class LeaderboardCommand extends Subcommand {
 	}
 
 	async chatInputCards(interaction: ChatInputCommandInteraction) {
-		const total = await db
-			.getRepository(Card)
-			.createQueryBuilder('card')
-			.where('card.owner IS NOT NULL')
-			.andWhere('card.burned = false')
-			.orderBy('mapper.rarity * condition.multiplier', 'DESC')
-			.getCount();
+		const [{ count }] = await db
+			.createEntityManager()
+			.query('select count(*) as count from card_leaderboard');
 
 		const message = new LazyPaginatedMessage();
 
-		for (let i = 0; i <= total && i < 250; i += 10) {
+		for (let i = 0; i <= count && i < 250; i += 10) {
 			message.addAsyncPageBuilder(async (builder) => {
-				const cards = await db
-					.getRepository(Card)
-					.createQueryBuilder('card')
-					.addSelect('mapper.rarity * condition.multiplier * IF(card.foil, 2, 1) as burnValue')
-					.innerJoinAndSelect('card.condition', 'condition')
-					.innerJoinAndSelect('card.mapper', 'mapper')
-					.innerJoinAndSelect('card.owner', 'owner')
-					.where('card.burned = false')
-					.orderBy('burnValue', 'DESC')
-					.limit(10)
-					.offset(i)
-					.getMany();
+				const cards: any[] = await db
+					.createEntityManager()
+					.query('SELECT * FROM card_leaderboard LIMIT 10 OFFSET ?', [i]);
 
 				const embed = new EmbedBuilder().setTitle('Card Leaderboard');
 
 				if (cards.length > 0)
 					embed.setDescription(
 						cards
-							.map((card, index) => {
-								return `${i + index + 1}. \`$${card.burnValue}\` · ${card.mapper.username}${card.foil ? ' (Foil)' : ''} · *Owned by ${card.owner!.username}*`;
+							.map((card: any, index) => {
+								return `${i + index + 1}. \`$${card.price}\` · ${card.username}${card.foil ? ' (Foil)' : ''} · *Owned by ${card.owner}*`;
 							})
 							.join('\n')
 					);
 
-				return builder.setContent(`Page ${i / 10 + 1}/${Math.ceil(total / 10)}`).setEmbeds([embed]);
+				return builder.setContent(`Page ${i / 10 + 1}/${Math.ceil(count / 10)}`).setEmbeds([embed]);
 			});
 		}
 

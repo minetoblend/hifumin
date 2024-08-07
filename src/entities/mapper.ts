@@ -13,4 +13,6 @@ export class Mapper {
     rarity!: number;
     @OneToMany(() => WishlistEntry, entry => entry.mapper)
     wishlistEntries!: typeof WishlistEntry[];
+    @Column({type: 'boolean', default: false})
+    deleted!: boolean;
 }

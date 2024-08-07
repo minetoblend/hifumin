@@ -27,6 +27,7 @@ export class ViewCommand extends Command {
 			.getRepository(Mapper)
 			.createQueryBuilder('mapper')
 			.where('LOWER(mapper.username) = :username', { username: username.toLowerCase() })
+			.andWhere('mapper.deleted = false')
 			.getOne();
 
 		if (!mapper) {

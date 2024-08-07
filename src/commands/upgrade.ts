@@ -46,10 +46,11 @@ export class UpgradeCommand extends Command {
                 where: {
                     owner: {
                         id: user.id
-                    }
+                    },
+                    burned: false
                 },
                 order: {
-                    createdAt: 'ASC'
+                    createdAt: 'DESC'
                 },
                 relations: ['mapper', 'owner', 'condition', 'condition.nextUpgrade', 'condition.previousUpgrade']
             });
@@ -133,7 +134,7 @@ export class UpgradeCommand extends Command {
                     where: {
                         id: card.id
                     },
-                    relations: ['condition', 'owner'],
+                    relations: ['condition', 'owner', 'mapper'],
                 })
 
                 if (currentCard?.owner?.id !== user.id || condition.id !== card.condition.id || !condition.nextUpgrade) {
@@ -175,10 +176,8 @@ export class UpgradeCommand extends Command {
                 }, {
                     amount: () => `amount - ${upgradePrice}`
                 });
-
-                await tx.getRepository(Card).update(currentCard.id, {
-                    condition: currentCard.condition
-                });
+                
+                await tx.getRepository(Card).save(currentCard);
 
 
 

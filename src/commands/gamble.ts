@@ -110,7 +110,7 @@ export class GambleCommand extends Command {
 			await ItemService.changeItemCount(user, 'gold', winnings - bet, tx);
 		});
 
-		EventLogService.logEvent(user, 'Gamble', { bet, winnings, roll: [...result].sort((a, b) => a.localeCompare(b)) });
+		EventLogService.logEvent(user, 'Gamble', { bet, winnings, roll: [...result].sort((a, b) => a.localeCompare(b)).join(',') });
 
 
 		for (let i = 0; i < result.length; i++) {

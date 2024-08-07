@@ -95,6 +95,11 @@ export class GambleCommand extends Command {
 			});
 		}
 
+		const comboCount = countCombos(result);
+		const multiplier = calculateMultiplier(comboCount);
+
+		let winnings = bet * multiplier;
+
 		await db.transaction('SERIALIZABLE', async (tx) => {
 			const currentAmount = await ItemService.getItemCount(user, 'gold', tx);
 			if (currentAmount < bet) {
@@ -103,18 +108,10 @@ export class GambleCommand extends Command {
 			}
 
 			await ItemService.changeItemCount(user, 'gold', winnings - bet, tx);
-
-			if (multiplier >= 1) {
-				await msg.edit(slotMachineTop + display + slotMachineBottomWin + `\n\nYou won \`${winnings}\` gold!`);
-			} else {
-				await msg.edit(slotMachineTop + display + slotMachineBottom + `\n\nYou lost...`);
-				if (multiplier === 0 && result.includes('💀')) {
-					try {
-						(await msg.fetch()).react('💀');
-					} catch (e) {}
-				}
-			}
 		});
+
+		EventLogService.logEvent(user, 'Gamble', { bet, winnings });
+
 
 		for (let i = 0; i < result.length; i++) {
 			await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -125,12 +122,16 @@ export class GambleCommand extends Command {
 			await msg.edit(slotMachineTop + display + slotMachineBottom);
 		}
 
-		const comboCount = countCombos(result);
-		const multiplier = calculateMultiplier(comboCount);
-
-		let winnings = bet * multiplier;
-
-		EventLogService.logEvent(user, 'Gamble', { bet, winnings });
+		if (multiplier >= 1) {
+			await msg.edit(slotMachineTop + display + slotMachineBottomWin + `\n\nYou won \`${winnings}\` gold!`);
+		} else {
+			await msg.edit(slotMachineTop + display + slotMachineBottom + `\n\nYou lost...`);
+			if (multiplier === 0 && result.includes('💀')) {
+				try {
+					(await msg.fetch()).react('💀');
+				} catch (e) {}
+			}
+		}
 	}
 
 	private spin(): string {

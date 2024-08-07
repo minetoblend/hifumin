@@ -11,6 +11,7 @@ import { renderCards } from '../services/cardRenderer.js';
 import { DiscordUser } from '../entities/discordUser.js';
 import { getNextCardId } from '../services/getNextCardId.js';
 import { EventLogService } from '../services/eventLogService.js';
+import { unlink } from 'fs/promises';
 
 export class UseCommand extends Command {
 	registerApplicationCommands(registry: ApplicationCommandRegistry) {
@@ -168,6 +169,8 @@ export class UseCommand extends Command {
 				}
 			]
 		});
+
+		await unlink(frame)
 
 		setTimeout(async () => {
 			try {

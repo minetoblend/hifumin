@@ -12,6 +12,7 @@ import { getTimeout, TimeoutType } from '../services/timeout.js';
 import { getNextCardId } from '../services/getNextCardId.js';
 import { GuildSettings } from '../entities/guildSettings.js';
 import { EventLogService } from '../services/eventLogService.js';
+import { unlink } from 'fs/promises';
 
 @ApplyOptions<Command.Options>({
 	description: 'Drops 3 cards'
@@ -93,6 +94,10 @@ export class DropCommand extends Command {
 			 });
 
 			const frame = await renderCards(cards);
+
+			setTimeout(async () => {
+				await unlink(frame)
+			}, 10_000)
 
 			const buttons = cards.map((card) => {
 				let name = card.mapper.username;

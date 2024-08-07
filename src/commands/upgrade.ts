@@ -13,6 +13,7 @@ import {db} from "../db.js";
 import {DiscordUserService} from "../services/discordUserService.js";
 import {renderCard} from "../services/cardRenderer.js";
 import {InventoryEntry} from "../entities/inventoryEntry.js";
+import { unlink } from "fs/promises";
 
 export class UpgradeCommand extends Command {
     registerApplicationCommands(registry: ApplicationCommandRegistry) {
@@ -113,6 +114,8 @@ export class UpgradeCommand extends Command {
                     )
             ]
         });
+
+        await unlink(imagePath)
 
         const response = await msg.awaitMessageComponent({
             componentType: ComponentType.Button,

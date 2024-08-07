@@ -13,6 +13,7 @@ import {db} from "../db.js";
 import {Card} from "../entities/card.js";
 import {ApplyOptions} from "@sapphire/decorators";
 import {renderCard} from "../services/cardRenderer.js";
+import { unlink } from 'fs/promises'
 
 @ApplyOptions<Command.Options>({
     description: 'Burn a card',
@@ -83,10 +84,6 @@ export class BurnCommand extends Command {
         const attachment = new AttachmentBuilder(imagePath)
             .setName('card.png')
 
-
-
-            
-
         const embed = new EmbedBuilder()
             .setTitle('Burn Card')
             .setDescription([
@@ -126,5 +123,7 @@ export class BurnCommand extends Command {
                     )
             ]
         })
+
+        await unlink(imagePath)
     }
 }

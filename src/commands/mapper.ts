@@ -5,6 +5,7 @@ import { renderCard } from '../services/cardRenderer.js';
 import { MessageBuilder } from '@sapphire/discord.js-utilities';
 import { AttachmentBuilder, EmbedBuilder } from 'discord.js';
 import { Mapper } from '../entities/mapper.js';
+import { unlink } from 'fs/promises';
 
 export class ViewCommand extends Command {
 	public constructor(context: Command.LoaderContext, options: Command.Options) {
@@ -65,5 +66,7 @@ export class ViewCommand extends Command {
 					])
 			])
 		);
+
+		await unlink(file)
 	}
 }

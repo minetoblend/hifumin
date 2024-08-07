@@ -5,6 +5,7 @@ import { db } from '../db.js';
 import { Card } from '../entities/card.js';
 import { renderCards } from '../services/cardRenderer.js';
 import { EventLogService } from '../services/eventLogService.js';
+import { unlink } from 'fs/promises';
 
 export class TradeCommand extends Command {
 	registerApplicationCommands(registry: ApplicationCommandRegistry) {
@@ -116,6 +117,8 @@ export class TradeCommand extends Command {
 				)
 			]
 		});
+
+		await unlink(frame)
 
 		const agreed = new Set<string>();
 

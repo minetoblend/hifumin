@@ -4,6 +4,7 @@ import {db} from "../db.js";
 import {Card} from "../entities/card.js";
 import { ItemService } from '../services/itemService.js';
 import { DiscordUserService } from '../services/discordUserService.js';
+import { EventLogService } from '../services/eventLogService.js';
 
 //import {DiscordUserService} from "../services/discordUserService.js";
 
@@ -81,6 +82,14 @@ export class BurnHandler extends InteractionHandler {
 
                 await ItemService.changeItemCount(user, 'gold', value, tx)
                 await ItemService.changeItemCount(user, card.dustType, card.dustValue, tx)
+
+                EventLogService.logEvent(user, 'burn', {
+                    card: {
+                        id: card.id,
+                        username: card.username,
+                        burnValue: card.burnValue
+                    }
+                })
 
                 await tx.getRepository(Card)
                     .update(card.id, {

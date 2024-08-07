@@ -4,6 +4,14 @@ import { EventLog } from "../entities/eventLog.js";
 
 export class EventLogService {
   static logEvent(user: DiscordUser, action: string, info = {}) {
+    console.log(JSON.stringify({
+      user: {
+        id: user.id,
+        username: user.username,
+      },
+      action: action,
+      ...info,
+    }))
     try {
       const log = new EventLog()
       log.user = user

@@ -95,22 +95,6 @@ export class GambleCommand extends Command {
 			});
 		}
 
-		for (let i = 0; i < result.length; i++) {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-			display = display
-				.split(' ')
-				.map((d, index) => (index === i ? result[i] : d))
-				.join(' ');
-			await msg.edit(slotMachineTop + display + slotMachineBottom);
-		}
-
-		const comboCount = countCombos(result);
-		const multiplier = calculateMultiplier(comboCount);
-
-		let winnings = bet * multiplier;
-
-		EventLogService.logEvent(user, 'Gamble', { bet, winnings });
-
 		await db.transaction('SERIALIZABLE', async (tx) => {
 			const currentAmount = await ItemService.getItemCount(user, 'gold', tx);
 			if (currentAmount < bet) {
@@ -131,6 +115,22 @@ export class GambleCommand extends Command {
 				}
 			}
 		});
+
+		for (let i = 0; i < result.length; i++) {
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+			display = display
+				.split(' ')
+				.map((d, index) => (index === i ? result[i] : d))
+				.join(' ');
+			await msg.edit(slotMachineTop + display + slotMachineBottom);
+		}
+
+		const comboCount = countCombos(result);
+		const multiplier = calculateMultiplier(comboCount);
+
+		let winnings = bet * multiplier;
+
+		EventLogService.logEvent(user, 'Gamble', { bet, winnings });
 	}
 
 	private spin(): string {

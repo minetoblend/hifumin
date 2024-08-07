@@ -11,7 +11,11 @@ import {CommandTimeout} from "./entities/commandTimeout.js";
 import {ShopItem} from "./entities/shopItem.js";
 import {UserEffect} from "./entities/userEffect.js";
 import {OptOut} from "./entities/optOut.js";
-import {TradeOffer, TradeSession} from "./entities/tradeSession.js";
+import {TradeAccept, TradeOffer, TradeSession} from "./entities/tradeSession.js";
+import { CardSequence } from "./entities/cardSequence.js";
+import { GuildSettings } from "./entities/guildSettings.js";
+import { EventLog } from "./entities/eventLog.js";
+import { SupportRequest } from "./entities/report.js";
 
 function reportMissingEnv(name: string): never {
     throw new Error(`Missing environment variable: ${name}`)

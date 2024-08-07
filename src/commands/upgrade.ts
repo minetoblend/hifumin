@@ -137,7 +137,7 @@ export class UpgradeCommand extends Command {
                     where: {
                         id: card.id
                     },
-                    relations: ['condition', 'owner', 'mapper'],
+                    relations: ['condition', 'owner', 'mapper', 'condition.nextUpgrade', 'condition.previousUpgrade'],
                 })
 
                 if (currentCard?.owner?.id !== user.id || condition.id !== card.condition.id || !condition.nextUpgrade) {

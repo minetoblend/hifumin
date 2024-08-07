@@ -4,7 +4,12 @@
 		"outDir": "./dist/",
 		"skipLibCheck": true,
 		"emitDecoratorMetadata": false,
-		"experimentalDecorators": true
+		"experimentalDecorators": true,
+		"noUnusedLocals": false,
+		"allowUnreachableCode": true,
+		"strictNullChecks": false,
+		"noImplicitReturns": false
 	},
-	"include": ["src/**/*.ts"]
+	"include": ["src/**/*.ts"],
+	"exclude": ["node_modules", "dist"]
 }

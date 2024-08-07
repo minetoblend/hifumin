@@ -67,7 +67,7 @@ export class UpgradeCommand extends Command {
             return;
         }
 
-        const condition = card.condition;
+        let condition = card.condition;
 
         if (!condition.nextUpgrade) {
             await interaction.reply('This card cannot be upgraded!');
@@ -156,6 +156,19 @@ export class UpgradeCommand extends Command {
                         components: [],
                         embeds: [
                             embed.setFooter({text: 'You do not have enough gold to upgrade this card',})
+                                .setColor('Red')
+                        ]
+                    })
+                    return;
+                }
+
+                condition = currentCard.condition
+
+                if(!condition.nextUpgrade) {
+                    await response.update({
+                        components: [],
+                        embeds: [
+                            embed.setFooter({text: 'You cannot upgrade this card',})
                                 .setColor('Red')
                         ]
                     })

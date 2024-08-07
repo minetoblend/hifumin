@@ -9,8 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: hifumin
-  IMAGE_NAME_SERVER: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   docker:

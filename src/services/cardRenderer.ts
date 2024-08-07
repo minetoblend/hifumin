@@ -7,10 +7,10 @@ import { Mapper } from '../entities/mapper.js';
 import { GIF } from './GIF.js';
 import { exec } from 'child_process';
 
-const fontPath = import.meta.resolve('@expo-google-fonts/nunito-sans/').slice('file:///'.length);
+// const fontPath = import.meta.resolve('@expo-google-fonts/nunito-sans/').slice('file:///'.length);
 
-registerFont(path.resolve(path.resolve(fontPath, 'NunitoSans_400Regular.ttf')), { family: 'Nunito Sans' });
-registerFont(path.resolve(path.resolve(fontPath, 'NunitoSans_600SemiBold.ttf')), { family: 'Nunito Sans Semibold' });
+// registerFont(path.resolve(path.resolve(fontPath, 'NunitoSans_400Regular.ttf')), { family: 'Nunito Sans' });
+// registerFont(path.resolve(path.resolve(fontPath, 'NunitoSans_600SemiBold.ttf')), { family: 'Nunito Sans Semibold' });
 
 const tmpdir = './.files/tmp';
 fs.mkdirSync(tmpdir, { recursive: true });

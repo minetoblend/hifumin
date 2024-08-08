@@ -42,13 +42,13 @@ async function logMetrics() {
     const numCardsOwned = await db.getRepository(Card).countBy({ burned: false, owner: Not(IsNull()) })
     const numUsers = await db.getRepository(DiscordUser).count()
 
-    console.log({
+    console.log(JSON.stringify({
         timestamp: Date.now(),
         cards_total: numCards,
         cards_total_burned: numCardsBurned,
         cards_total_owned: numCardsOwned,
         users_total: numUsers,
-    })
+    }))
 }
 
 void main();

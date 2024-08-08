@@ -206,7 +206,7 @@ export function calculateMultiplier(comboCount: { [key: string]: number }): numb
 	for (const [symbol, count] of Object.entries(comboCount)) {
 		const key = symbol.repeat(count);
 		if (specialCombos[key]) {
-			totalMultiplier += specialCombos[key];
+			totalMultiplier *= specialCombos[key];
 		}
 	}
 	return totalMultiplier;

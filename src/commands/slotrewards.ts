@@ -10,12 +10,15 @@ export class SlotrewardsCommand extends Command {
 	}
 
 	async chatInputRun(interaction: ChatInputCommandInteraction) {
-		const messge = Object.entries(specialCombos)
-      .sort(([, amountA], [, amountB]) => amountA - amountB )
-			.map(([combo, amount]) => {
-        const formattedCombo = combo.padStart(3, '   ');
+		const messge = specialCombos
+      .sort((a, b) => a.multiplier - b.multiplier )
+			.map((combo) => {
 
-				return `${formattedCombo}: ${amount}x`;
+        const formattedCombo = combo.type === 'sequence' 
+					? combo.sequence 
+					: combo.symbol.repeat(combo.count)
+
+				return `${formattedCombo}: ${combo.multiplier}x`;
 			})
 			.join('\n');
 

@@ -95,8 +95,7 @@ export class GambleCommand extends Command {
 			});
 		}
 
-		const comboCount = countCombos(result);
-		const multiplier = calculateMultiplier(comboCount);
+		const multiplier = calculateMultiplier(result);
 
 		let winnings = bet * multiplier;
 
@@ -111,7 +110,6 @@ export class GambleCommand extends Command {
 		});
 
 		EventLogService.logEvent(user, 'gamble', { bet, winnings, roll: [...result].sort((a, b) => a.localeCompare(b)).join(',') });
-
 
 		for (let i = 0; i < result.length; i++) {
 			await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -146,77 +144,162 @@ export class GambleCommand extends Command {
 const animatedEmoji = '<a:slotMachineAnimation:1249081278381162577>'; // replace this with id of emoji from a server the bot is in
 
 const symbolsWeighted = [
-	{ symbol: '🍀', weight: 0.25 },
-	{ symbol: '🍒', weight: 1.0 },
-	{ symbol: '❤️', weight: 1.0 },
-	{ symbol: '🍋', weight: 1.0 },
-	{ symbol: '🍊', weight: 0.8 },
-	{ symbol: '💀', weight: 1.0 },
-	{ symbol: '🍉', weight: 0.7 },
-	{ symbol: '🍇', weight: 0.7 },
-	{ symbol: '⭐', weight: 0.2 },
-	{ symbol: '💰', weight: 0.15 },
-	{ symbol: '💎', weight: 0.1 },
-	{ symbol: '👑', weight: 0.08 }
+	{ symbol: "🍀", weight: 0.25 },
+  { symbol: "🍒", weight: 1.0 },
+  { symbol: "❤️", weight: 0.9 },
+  { symbol: "🍋", weight: 1.0 },
+  { symbol: "🍊", weight: 0.8 },
+  { symbol: "💀", weight: 1.0 },
+  { symbol: "🍉", weight: 0.7 },
+  { symbol: "🍇", weight: 0.7 },
+  { symbol: "⭐", weight: 0.2 },
+  { symbol: "💰", weight: 0.15 },
+  { symbol: "💎", weight: 0.1 },
+  { symbol: "👑", weight: 0.08 },
 ];
 
-export const specialCombos: { [key: string]: number } = {
-	'🍀': 2,
-	'🍒🍒': 3,
-	'❤️❤️': 10,
-	'🍀🍀': 15,
-	'🍋🍋🍋': 25,
-	'🍊🍊🍊': 25,
-	'🍇🍇🍇': 25,
-	'❤️❤️❤️': 50,
-	'🍒🍒🍒': 40,
-	'🍉🍉🍉': 50,
-	'💎⭐💎': 50,
-	'💎💰💎': 50,
-	'👑💰👑': 65,
-	'👑💎👑': 65,
-	'👑⭐👑': 65,
-	'🍀🍀🍀': 75,
-	'⭐⭐⭐': 100,
-	'💰💰💰': 100,
-	'💎💎💎': 150,
-	'👑👑👑': 333
-};
+export const specialCombos: ({
+	type: 'symbol',
+	symbol: string,
+	count: number,
+	multiplier: number,
+} | {
+	type: 'sequence',
+	sequence: string,
+	multiplier: number,
+})[] = [
+	{
+    type: "symbol",
+    symbol: "🍀",
+    count: 1,
+    multiplier: 2,
+  },
+  {
+    type: "symbol",
+    symbol: "🍒",
+    count: 2,
+    multiplier: 3,
+  },
+  {
+    type: "symbol",
+    symbol: "❤️",
+    count: 2,
+    multiplier: 10,
+  },
+  {
+    type: "symbol",
+    symbol: "🍀",
+    count: 2,
+    multiplier: 15,
+  },
+  {
+    type: "sequence",
+    sequence: "🍋🍋🍋",
+    multiplier: 20,
+  },
+  {
+    type: "sequence",
+    sequence: "🍊🍊🍊",
+    multiplier: 20,
+  },
+  {
+    type: "sequence",
+    sequence: "🍇🍇🍇",
+    multiplier: 25,
+  },
+  {
+    type: "sequence",
+    sequence: "❤️❤️❤️",
+    multiplier: 50,
+  },
+  {
+    type: "sequence",
+    sequence: "🍒🍒🍒",
+    multiplier: 35,
+  },
+  {
+    type: "sequence",
+    sequence: "🍉🍉🍉",
+    multiplier: 50,
+  },
+  {
+    type: "sequence",
+    sequence: "💎⭐💎",
+    multiplier: 50,
+  },
+  {
+    type: "sequence",
+    sequence: "💎💰💎",
+    multiplier: 50,
+  },
+  {
+    type: "sequence",
+    sequence: "💰👑💰",
+    multiplier: 65,
+  },
+  {
+    type: "sequence",
+    sequence: "👑💎👑",
+    multiplier: 65,
+  },
+  {
+    type: "sequence",
+    sequence: "👑⭐👑",
+    multiplier: 65,
+  },
+  {
+    type: "sequence",
+    sequence: "🍀🍀🍀",
+    multiplier: 75,
+  },
+  {
+    type: "sequence",
+    sequence: "⭐⭐⭐",
+    multiplier: 100,
+  },
+  {
+    type: "sequence",
+    sequence: "💰💰💰",
+    multiplier: 100,
+  },
+  {
+    type: "sequence",
+    sequence: "💎💎💎",
+    multiplier: 150,
+  },
+  {
+    type: "sequence",
+    sequence: "👑👑👑",
+    multiplier: 333,
+  },
+]
 
 const slotMachineTop = '_ _   \u{200A}        🚨\n🇸\u{E0020}🇱\u{E0020}🇴\u{E0020}🇹\u{E0020}🇸\n\n   \u{200A}\u{200A}  ';
 const slotMachineBottom = '\n\n🟦🟦⬛🟦🟦📍';
 const slotMachineBottomWin = '\n\n🟦🟦💵🟦🟦📍';
 
-function countCombos(result: string[]): { [key: string]: number } {
-	const comboCount: { [key: string]: number } = {};
+function calculateMultiplier(symbols: string[]) {
+  let multiplier = 1;
+  let match = false;
 
-	result.forEach((symbol) => {
-		if (!comboCount[symbol]) {
-			comboCount[symbol] = 0;
-		}
-		comboCount[symbol]++;
-	});
+  for (const combo of exports.specialCombos) {
+    if (combo.type === "symbol") {
+      let count = 0;
 
-	return comboCount;
-}
+      for (let symbol of symbols) {
+        if (symbol === combo.symbol) count++;
+      }
 
-export function calculateMultiplier(comboCount: { [key: string]: number }): number {
-	let totalMultiplier = 0;
+      if (count === combo.count) {
+        multiplier *= combo.multiplier;
+        match = true    ;
+      }
+    } else if (combo.type === "sequence" && symbols.join('').includes(combo.sequence)) {
+      return combo.multiplier;
+    }
+  }
 
-	for (const [symbol, count] of Object.entries(comboCount)) {
-		const key = symbol.repeat(count);
-		if (specialCombos[key]) {
-			totalMultiplier *= specialCombos[key];
-		}
-	}
-	return totalMultiplier;
-}
-
-function softmax(weights: number[]): number[] {
-	const max = Math.max(...weights);
-	const exps = weights.map((weight) => Math.exp(weight - max));
-	const sumExps = exps.reduce((a, b) => a + b, 0);
-	return exps.map((exp) => exp / sumExps);
+  return match ? multiplier : 0;
 }
 
 function weightedRandom(items: string[], probabilities: number[]): string {

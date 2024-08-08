@@ -282,7 +282,7 @@ function calculateMultiplier(symbols: string[]) {
   let multiplier = 1;
   let match = false;
 
-  for (const combo of exports.specialCombos) {
+  for (const combo of specialCombos) {
     if (combo.type === "symbol") {
       let count = 0;
 

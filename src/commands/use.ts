@@ -142,6 +142,17 @@ export class UseCommand extends Command {
 				await repository.save(card);
 
 				cards.push(card);
+
+				console.log(JSON.stringify({
+					event: 'create_card',
+					card: {
+						username: card.username,
+						burnValue: card.burnValue,
+						rarity: mapper.rarity,
+						condition: card.condition,
+						condition_multiplier: card.condition.multiplier,
+					},
+				}))
 			}
 		});
 

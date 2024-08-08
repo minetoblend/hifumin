@@ -80,6 +80,19 @@ export class DropCommand extends Command {
 				if (Math.random() < 0.05) card.foil = true;
 
 				cards.push(card);
+
+				card.calculateBurnValue()
+
+				console.log(JSON.stringify({
+					event: 'create_card',
+					card: {
+						username: card.username,
+						burnValue: card.burnValue,
+						rarity: mapper.rarity,
+						condition: card.condition,
+						condition_multiplier: card.condition.multiplier,
+					},
+				}))
 			}
 
 			await repository.save(cards);

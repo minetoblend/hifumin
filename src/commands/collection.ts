@@ -39,7 +39,7 @@ export class CollectionCommand extends Command {
 			return;
 		}
 
-		for (let i = 0; i < total; i += 10) {
+		for (let i = 0; i < Math.min(total, 250); i += 10) {
 			message.addAsyncPageBuilder(async (builder) => {
 				let query = repository
 					.createQueryBuilder('card')

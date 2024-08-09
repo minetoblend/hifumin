@@ -12,16 +12,5 @@ export class EventLogService {
       action: action,
       ...info,
     }))
-    try {
-      const log = new EventLog()
-      log.user = user
-      log.username = user.username
-      log.action = action
-      log.info = info
-      log.timestamp = new Date()
-      db.getRepository(EventLog).save(log)
-    } catch (e) {
-      console.error('Failed to log event', e)
-    }
   }
 }

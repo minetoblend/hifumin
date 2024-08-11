@@ -146,7 +146,7 @@ const animatedEmoji = '<a:slotMachineAnimation:1249081278381162577>'; // replace
 const symbolsWeighted = [
 	{ symbol: "🍀", weight: 0.25 },
   { symbol: "🍒", weight: 1.0 },
-  { symbol: "❤️", weight: 1.0 },
+  { symbol: "❤️", weight: 1.1 },
   { symbol: "🍋", weight: 1.0 },
   { symbol: "🍊", weight: 0.8 },
   { symbol: "💀", weight: 1.0 },

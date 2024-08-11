@@ -322,7 +322,7 @@ export class JobsCommand extends Subcommand {
 						`it got vetoed over excessive jumps.`,
 						`it got vetoed over looking like it was AI-generated.`,
 						`it got vetoed over looking like someone's first map.`,
-						`it got vetoed because the gds were deemed to be content bloat.`,
+						`it got vetoed as the gds were deemed to be content bloat.`,
 						`it got vetoed and one of the the bns got kicked from bng over the nomination.`,
 						`they are blacklisted by nearly every bn.`,
 						`they insisted on using the most obnoxious keysounds.`,

@@ -8,7 +8,7 @@ import {InventoryEntry} from "./entities/inventoryEntry.js";
 import {InventoryItem} from "./entities/inventoryItem.js";
 import {WishlistEntry} from "./entities/wishlistEntry.js";
 import {CommandTimeout} from "./entities/commandTimeout.js";
-import {ShopItem} from "./entities/shopItem.js";
+import {ShopItem, ShopPrice} from "./entities/shopItem.js";
 import {UserEffect} from "./entities/userEffect.js";
 import {OptOut} from "./entities/optOut.js";
 import {TradeAccept, TradeOffer, TradeSession} from "./entities/tradeSession.js";
@@ -16,6 +16,7 @@ import { CardSequence } from "./entities/cardSequence.js";
 import { GuildSettings } from "./entities/guildSettings.js";
 import { EventLog } from "./entities/eventLog.js";
 import { SupportRequest } from "./entities/report.js";
+import { JobAssignment } from "./entities/job_assignment.js";
 
 function reportMissingEnv(name: string): never {
     throw new Error(`Missing environment variable: ${name}`)
@@ -50,6 +51,8 @@ export const db = new DataSource({
 		EventLog,
 		TradeAccept,
 		SupportRequest,
+		JobAssignment,
+		ShopPrice,
 	],
 	subscribers: [],
 	migrations: [],

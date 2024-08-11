@@ -6,6 +6,7 @@ import { Card } from '../entities/card.js';
 import { renderCards } from '../services/cardRenderer.js';
 import { EventLogService } from '../services/eventLogService.js';
 import { unlink } from 'fs/promises';
+import { CardService } from '../services/cardService.js';
 
 export class TradeCommand extends Command {
 	registerApplicationCommands(registry: ApplicationCommandRegistry) {
@@ -78,6 +79,28 @@ export class TradeCommand extends Command {
 			return;
 		}
 
+		switch (await CardService.getCardUsage(db.createEntityManager(), card1.id)) {
+			case 'job_slot': {
+				await interaction.reply({
+					content: `Cannot trade ${card1.username}, it is currently assigned to a job`
+				});
+				return;
+			}
+			default: {
+			}
+		}
+
+		switch (await CardService.getCardUsage(db.createEntityManager(), card2.id)) {
+			case 'job_slot': {
+				await interaction.reply({
+					content: `Cannot trade ${card2.username}, it is currently assigned to a job`
+				});
+				return;
+			}
+			default: {
+			} // don't ask me why but typescript refuses to compile this without adding a default statement
+		}
+
 		const frame = await renderCards([card1, card2]);
 
 		const msg = await interaction.reply({
@@ -118,7 +141,7 @@ export class TradeCommand extends Command {
 			]
 		});
 
-		await unlink(frame)
+		await unlink(frame);
 
 		const agreed = new Set<string>();
 
@@ -195,6 +218,32 @@ export class TradeCommand extends Command {
 				}
 			});
 
+			switch (await CardService.getCardUsage(tx, carda.id)) {
+				case 'job_slot': {
+					await (
+						await msg.fetch()
+					).reply({
+						content: `Cannot trade ${card1.username}, it is currently assigned to a job`
+					});
+					return;
+				}
+				default: {
+				}
+			}
+
+			switch (await CardService.getCardUsage(tx, cardb.id)) {
+				case 'job_slot': {
+					await (
+						await msg.fetch()
+					).reply({
+						content: `Cannot trade ${card2.username}, it is currently assigned to a job`
+					});
+					return;
+				}
+				default: {
+				} // don't ask me why but typescript refuses to compile this without adding a default statement
+			}
+
 			if (!carda || !cardb || carda.owner?.id !== user1.id || cardb.owner?.id !== user2.id) {
 				await (
 					await msg.fetch()
@@ -212,20 +261,20 @@ export class TradeCommand extends Command {
 				owner: carda.owner
 			});
 
-            EventLogService.logEvent(user1, 'trade', {
-                tradeWith: {
-                    id: user2.id,
-                    username: user2.username
-                },
-                offer: {
-                    id: card1.id,
-                    mapper: card1.mapper.username
-                },
-                receive: {
-                    id: card2.id,
-                    mapper: card2.mapper.username
-                }
-            })
+			EventLogService.logEvent(user1, 'trade', {
+				tradeWith: {
+					id: user2.id,
+					username: user2.username
+				},
+				offer: {
+					id: card1.id,
+					mapper: card1.mapper.username
+				},
+				receive: {
+					id: card2.id,
+					mapper: card2.mapper.username
+				}
+			});
 
 			await (
 				await msg.fetch()

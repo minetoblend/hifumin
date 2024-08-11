@@ -1,5 +1,5 @@
 import { ApplicationCommandRegistry, Command } from '@sapphire/framework';
-import { ShopItem } from '../entities/shopItem.js';
+import { ShopItem, ShopPrice } from '../entities/shopItem.js';
 import { db } from '../db.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 import { ItemService } from '../services/itemService.js';
@@ -34,7 +34,8 @@ export class BuyCommand extends Command {
 				id: itemId
 			},
 			relations: {
-				item: true
+				item: true,
+				prices: true,
 			}
 		});
 
@@ -46,13 +47,16 @@ export class BuyCommand extends Command {
 			return;
 		}
 
-		const totalCost = item.price * quantity;
+		function formatPrices(prices: ShopPrice[]) {
+			console.log(prices)
+			return prices.map(p => `${p.amount * quantity} ${p.itemId}`).join(', ')
+	}
 
 		const message = await interaction.reply({
 			embeds: [
 				new EmbedBuilder()
 					.setTitle('Purchase ' + item.name)
-					.setDescription(`Are you sure you want to buy ${quantity}x \`${item.id}\` for ${totalCost} gold?`)
+					.setDescription(`Are you sure you want to buy ${quantity}x \`${item.id}\` for ${formatPrices(item.prices)}?`)
 			],
 			components: [
 				new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -84,29 +88,33 @@ export class BuyCommand extends Command {
 
 		if (response.customId === 'confirm') {
 			await db.transaction('SERIALIZABLE', async (tx) => {
-				const gold = await ItemService.getItemCount(user, 'gold', tx);
-				if (gold < totalCost) {
-					await message.edit({
-						embeds: [new EmbedBuilder().setFooter({ text: 'Purchase Cancelled' }).setColor('Red')],
-						components: []
-					});
-					const errorMessage = await response.reply({
-						content: 'You do not have enough gold'
-					});
-					setTimeout(async () => {
-						try {
-							await errorMessage.delete();
-						} catch (e) {}
-					}, 15000);
-					return;
+				for(const price of item.prices) {
+					const numItems = await ItemService.getItemCount(user, price.itemId, tx);
+					if (numItems < price.amount * quantity) {
+						await message.edit({
+							embeds: [new EmbedBuilder().setFooter({ text: 'Purchase Cancelled' }).setColor('Red')],
+							components: []
+						});
+						const errorMessage = await response.reply({
+							content: `You do not have enough \`${item.id}\``
+						});
+						setTimeout(async () => {
+							try {
+								await errorMessage.delete();
+							} catch (e) {}
+						}, 15000);
+						throw Error()
+					}
+	
+					await ItemService.changeItemCount(user, price.itemId, -price.amount * quantity, tx);
 				}
 
-				await ItemService.changeItemCount(user, 'gold', -totalCost, tx);
 				await ItemService.changeItemCount(user, item.item.id, quantity, tx);
+				
 
 				await message.edit({
 					embeds: [
-						new EmbedBuilder().setDescription(`You have bought ${quantity}x \`${item.name}\` for ${totalCost} gold`).setColor('Green')
+						new EmbedBuilder().setDescription(`You have bought ${quantity}x \`${item.name}\` for ${formatPrices(item.prices,)}`).setColor('Green')
 					],
 					components: []
 				});

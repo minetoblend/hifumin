@@ -343,7 +343,7 @@ export class JobsCommand extends Subcommand {
 
 						await tx.getRepository(Card).save(card);
 
-						outcomeMessage.push(`The mapper got demotivated and is now at \`${card.jobMotivation}/10\``);
+						outcomeMessage.push(`${card.username} got demotivated and is now at \`${card.jobMotivation}/10\``);
 					}
 				}
 

@@ -21,59 +21,57 @@ export class ChangelogCommand extends Command {
 			date: new Date('2024-06-07'),
 			description: ['Bot automaticaly posts new changes in servers with configured bot channel now.']
 		},
-    {
-      id: 3,
-      date: new Date('2024-06-07'),
-      description: [
-        'Bot can pin new change announcements in the bot channel now.',
-        'Use the `/settings pinchanges` command to toggle pinning of new change announcements.'
-      ]
-    },
-    {
-      id: 4,
-      date: new Date('2024-06-07'),
-      description: [
-        'Buffed drop speedup.',
-        'Might revert if it turns out to be overpowered.'
-      ]
-    },
-    {
-      id: 5,
-      date: new Date('2024-06-07'),
-      description: [
-        'Added `/gamble` command which lets you bet some gold.',
-      ]
-    },
-    {
-      id: 6,
-      date: new Date('2024-06-07'),
-      description: [
-        '`/cooldown` now shows the daily cooldown.',
-      ]
-    },
+		{
+			id: 3,
+			date: new Date('2024-06-07'),
+			description: [
+				'Bot can pin new change announcements in the bot channel now.',
+				'Use the `/settings pinchanges` command to toggle pinning of new change announcements.'
+			]
+		},
+		{
+			id: 4,
+			date: new Date('2024-06-07'),
+			description: ['Buffed drop speedup.', 'Might revert if it turns out to be overpowered.']
+		},
+		{
+			id: 5,
+			date: new Date('2024-06-07'),
+			description: ['Added `/gamble` command which lets you bet some gold.']
+		},
+		{
+			id: 6,
+			date: new Date('2024-06-07'),
+			description: ['`/cooldown` now shows the daily cooldown.']
+		},
 		{
 			id: 7,
 			date: new Date('2024-06-07'),
-			description: [
-				'`/daily` now resets at midnight (UTC+2).'
-			]
+			description: ['`/daily` now resets at midnight (UTC+2).']
 		},
 		{
-			'id': 8,
-			'date': new Date('2024-06-07'),
-			'description': [
-				'Drop reminders are enabled again now. Use `/reminder` to toggle them.',
-				'Make sure the bot can dm you or it won\'t work!',
-			]
+			id: 8,
+			date: new Date('2024-06-07'),
+			description: ['Drop reminders are enabled again now. Use `/reminder` to toggle them.', "Make sure the bot can dm you or it won't work!"]
 		},
 		{
 			id: 9,
-			'date': new Date('2024-06-08'),
-			'description': [
+			date: new Date('2024-06-08'),
+			description: [
 				'The `/gamble` command has been reworked.',
 				'You can now get much higher rewards, however the chance of getting a win is lower.',
 				'Use `/slotrewards` to see the possible winning combinations.',
-				'Shoutout to visionary for coding this!',
+				'Shoutout to visionary for coding this!'
+			]
+		},
+		{
+			id: 10,
+			date: new Date('2024-08-11'),
+			description: [
+				'Added a job system where you can force your poor cards to make maps (And earn you gold).',
+				'Use `/jobs assign` to assign cards to job slots.',
+				'Use `/jobs work` to put your cards to work.',
+				'Job outcome can affect your mappers motivation, so watch out.'
 			]
 		}
 	];

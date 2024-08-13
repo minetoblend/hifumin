@@ -36,7 +36,7 @@ export class JobsCommand extends Subcommand {
 
 		setInterval(() => {
 			this.updateMotivation();
-		}, 4 * 60 * 60 * 1000);
+		}, 6 * 60 * 60 * 1000);
 
 		this.updateMotivation();
 	}

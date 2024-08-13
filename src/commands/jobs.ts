@@ -332,7 +332,7 @@ export class JobsCommand extends Subcommand {
 					outcomeMessage.push(messages[Math.floor(Math.random() * messages.length)]);
 
 					if (Math.random() < 0.2) {
-						card.jobMindblockedUntil = new Date(Date.now() + (12 + Math.random() * 24) * 60 * 60 * 1000);
+						card.jobMindblockedUntil = new Date(Date.now() + /* 12 hours */ 12 * 60 * 60 * 1000);
 						card.jobMotivation = Math.max(1, Math.min(card.jobMotivation - 2, 4));
 
 						await tx.getRepository(Card).save(card);

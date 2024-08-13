@@ -36,7 +36,9 @@ export class JobsCommand extends Subcommand {
 
 		setInterval(() => {
 			this.updateMotivation();
-		}, 10 * 60_000);
+		}, 4 * 60 * 60 * 1000);
+
+		this.updateMotivation();
 	}
 
 	registerApplicationCommands(registry: Subcommand.Registry) {
@@ -395,7 +397,7 @@ export class JobsCommand extends Subcommand {
 		const alteredCards: Card[] = [];
 
 		for (const card of cards) {
-			if (card.jobMotivation < 7 && Math.random() < 0.2) {
+			if (card.jobMotivation < 7) {
 				card.jobMotivation++;
 				alteredCards.push(card);
 			}

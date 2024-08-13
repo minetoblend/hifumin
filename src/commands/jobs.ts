@@ -254,7 +254,9 @@ export class JobsCommand extends Subcommand {
 				for (const assignment of assignments) {
 					let duration = 60 * 60 * 1000;
 
-					duration *= 1 - (Math.random() * 0.3 + (assignment.card.jobEffort / 240) * 0.3);
+					if (assignment.card.jobMindblocked) {
+						duration *= 1.5;
+					}
 
 					await repository.update(
 						{

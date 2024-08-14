@@ -391,7 +391,7 @@ export class JobsCommand extends Subcommand {
 		const repository = db.getRepository(Card)
 
 		let cards = await repository.find({
-			where: { jobMotivation: LessThan(7) }
+			where: { jobMotivation: Not(7) }
 		});
 
 		cards = cards.filter((it) => !it.jobMindblocked);
@@ -401,6 +401,9 @@ export class JobsCommand extends Subcommand {
 		for (const card of cards) {
 			if (card.jobMotivation < 7) {
 				card.jobMotivation++;
+				alteredCards.push(card);
+			} else {
+				card.jobMotivation--;
 				alteredCards.push(card);
 			}
 		}

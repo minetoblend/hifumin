@@ -118,9 +118,12 @@ export async function drawCard(ctx: CanvasRenderingContext2D, card: Card, option
 	if (options.cardCode !== false) {
 		ctx.beginPath();
 		ctx.font = '16px "Nunito Sans"';
-		ctx.fillStyle = '#606069';
+		ctx.fillStyle = 'white';
+		ctx.globalAlpha = 0.7;
 		ctx.textBaseline = 'top';
 		ctx.fillText('#' + card.id, 14, 350);
+
+		ctx.globalAlpha = 1;
 	}
 
 	if (card.foil) {

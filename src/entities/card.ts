@@ -64,10 +64,6 @@ export class Card {
 	@BeforeInsert()
 	@BeforeUpdate()
 	calculateBurnValue() {
-		if(!this.burnable) {
-			return Infinity;
-		}
-
 		let value = this.mapper.rarity * this.condition.multiplier * 5;
 
 		if (this.foil) {

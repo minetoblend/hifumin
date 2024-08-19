@@ -85,33 +85,35 @@ export async function renderCards(cards: Card[], options: Options = {}) {
 export async function drawCard(ctx: CanvasRenderingContext2D, card: Card, options: Options = {}) {
 	const mapper = card.mapper;
 
-	await renderFrame(ctx, mapper);
+	await renderFrame(ctx, card);
 
-	const avatar = await loadImage(mapper.avatarUrl);
+	if (card.frameId === null) {
+		const avatar = await loadImage(mapper.avatarUrl);
 
-	ctx.textDrawingMode = 'path';
-	ctx.antialias = 'subpixel';
-	ctx.imageSmoothingEnabled = true;
-	ctx.quality = 'best';
+		ctx.textDrawingMode = 'path';
+		ctx.antialias = 'subpixel';
+		ctx.imageSmoothingEnabled = true;
+		ctx.quality = 'best';
 
-	ctx.save();
-	ctx.translate(20, 20);
+		ctx.save();
+		ctx.translate(20, 20);
 
-	// avatar
-	ctx.save();
-	ctx.beginPath();
-	ctx.roundRect(0, 0, 256, 256 - 2, [4, 4, 0, 0]);
-	ctx.clip();
-	ctx.drawImage(avatar, 0, 0, 256, 256);
-	ctx.restore();
+		// avatar
+		ctx.save();
+		ctx.beginPath();
+		ctx.roundRect(0, 0, 256, 256 - 2, [4, 4, 0, 0]);
+		ctx.clip();
+		ctx.drawImage(avatar, 0, 0, 256, 256);
+		ctx.restore();
 
-	// text
+		// text
 
-	ctx.beginPath();
-	ctx.font = '22px "Nunito Sans Semibold"';
-	ctx.fillStyle = 'white';
-	ctx.textBaseline = 'top';
-	ctx.fillText(mapper.username, 14, 269);
+		ctx.beginPath();
+		ctx.font = '22px "Nunito Sans Semibold"';
+		ctx.fillStyle = 'white';
+		ctx.textBaseline = 'top';
+		ctx.fillText(mapper.username, 14, 269);	
+	}
 
 	if (options.cardCode !== false) {
 		ctx.beginPath();
@@ -135,10 +137,12 @@ export async function drawCard(ctx: CanvasRenderingContext2D, card: Card, option
 	ctx.restore();
 }
 
-async function renderFrame(ctx: CanvasRenderingContext2D, mapper: Mapper) {
+async function renderFrame(ctx: CanvasRenderingContext2D, card: Card) {
 	let frame: Image;
-	if (mapper.rarity >= 40) frame = await loadImage('assets/frame_legendary.png');
-	else if (mapper.rarity >= 20) frame = await loadImage('assets/frame_epic.png');
+
+	if (card.frameId !== null) frame = await loadImage(`assets/frame_custom_${card.frameId}.png`);
+	else if (card.mapper.rarity >= 40) frame = await loadImage('assets/frame_legendary.png');
+	else if (card.mapper.rarity >= 20) frame = await loadImage('assets/frame_epic.png');
 	else frame = await loadImage('assets/frame_rare.png');
 
 	ctx.drawImage(frame, 0, 0, paddedCardSize.width, paddedCardSize.height);

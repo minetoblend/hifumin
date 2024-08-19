@@ -47,7 +47,7 @@ export class Card {
 	burnable!: boolean;
 
 	@Column('int', { name: 'frame_id', nullable: true })
-	frameId!: number;
+	frameId!: number | null = null;
 
 	@Column('int', { name: 'burn_value', default: 0, nullable: false })
 	burnValue!: number;

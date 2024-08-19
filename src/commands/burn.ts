@@ -70,6 +70,13 @@ export class BurnCommand extends Command {
 			return;
 		}
 
+		if (!card.burnable) {
+			await response.edit({
+				content: `This card is not burnable`
+			});
+			return;
+		}
+
 		switch (await CardService.getCardUsage(db.createEntityManager(), card.id)) {
 			case 'job_slot': {
 				await response.edit({

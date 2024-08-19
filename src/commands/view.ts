@@ -70,7 +70,7 @@ export class ViewCommand extends Command {
                   },
                   {
                     name: 'Burn Value',
-                    value: card.burnValue + ' Gold'
+                    value: card.burnable ? card.burnValue + ' Gold' : 'Not burnable',
                   }
                 ])
         ])

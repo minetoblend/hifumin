@@ -43,6 +43,9 @@ export class Card {
 	@Column('boolean', { default: false, nullable: false })
 	foil!: boolean;
 
+	@Column('boolean', { default: true, nullable: false })
+	burnable!: boolean;
+
 	@Column('int', { name: 'frame_id', nullable: true })
 	frameId!: number;
 
@@ -61,6 +64,10 @@ export class Card {
 	@BeforeInsert()
 	@BeforeUpdate()
 	calculateBurnValue() {
+		if(!this.burnable) {
+			return Infinity;
+		}
+
 		let value = this.mapper.rarity * this.condition.multiplier * 5;
 
 		if (this.foil) {

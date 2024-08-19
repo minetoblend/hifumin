@@ -87,16 +87,16 @@ export async function drawCard(ctx: CanvasRenderingContext2D, card: Card, option
 
 	await renderFrame(ctx, card);
 
+	ctx.textDrawingMode = 'path';
+	ctx.antialias = 'subpixel';
+	ctx.imageSmoothingEnabled = true;
+	ctx.quality = 'best';
+
+	ctx.save();
+	ctx.translate(20, 20);
+
 	if (card.frameId === null) {
 		const avatar = await loadImage(mapper.avatarUrl);
-
-		ctx.textDrawingMode = 'path';
-		ctx.antialias = 'subpixel';
-		ctx.imageSmoothingEnabled = true;
-		ctx.quality = 'best';
-
-		ctx.save();
-		ctx.translate(20, 20);
 
 		// avatar
 		ctx.save();

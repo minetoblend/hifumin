@@ -43,6 +43,12 @@ export class Card {
 	@Column('boolean', { default: false, nullable: false })
 	foil!: boolean;
 
+	@Column('boolean', { default: true, nullable: false })
+	burnable!: boolean;
+
+	@Column('int', { name: 'frame_id', nullable: true })
+	frameId: number | null = null;
+
 	@Column('int', { name: 'burn_value', default: 0, nullable: false })
 	burnValue!: number;
 

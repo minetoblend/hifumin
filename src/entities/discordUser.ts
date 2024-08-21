@@ -10,4 +10,6 @@ export class DiscordUser {
     reminderEnabled!: boolean;
     @Column({type: 'boolean', default: false, nullable: false})
     gamblingWarningShown!: boolean;
+    @Column({ type: 'boolean', default: false, nullable: false })
+    deactivated: boolean;
 }

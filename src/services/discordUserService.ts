@@ -8,7 +8,7 @@ export class DiscordUserService {
 
 
     static async findById(id: string) {
-        return this.repository.findOneBy({id})
+        return this.repository.findOneBy({ id, deactivated: false })
     }
 
     static async findOrCreate(user: User) {

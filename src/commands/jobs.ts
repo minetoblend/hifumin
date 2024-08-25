@@ -8,6 +8,7 @@ import { ChannelType, EmbedBuilder } from 'discord.js';
 import { CardService } from '../services/cardService.js';
 import { LessThan, LessThanOrEqual, MoreThanOrEqual, Not } from 'typeorm';
 import { ItemService } from '../services/itemService.js';
+import { CronJob } from 'cron';
 
 export class JobsCommand extends Subcommand {
 	public constructor(context: Subcommand.LoaderContext, options: Subcommand.Options) {
@@ -34,11 +35,8 @@ export class JobsCommand extends Subcommand {
 			this.updateJobs();
 		}, 30_000);
 
-		setInterval(() => {
-			this.updateMotivation();
-		}, 6 * 60 * 60 * 1000);
-
-		this.updateMotivation();
+		this.motivationGain();
+		this.motivationLoss();
 	}
 
 	registerApplicationCommands(registry: Subcommand.Registry) {
@@ -387,7 +385,7 @@ export class JobsCommand extends Subcommand {
 		});
 	}
 
-	private async updateMotivation() {
+	private async updateMotivation(type: string) {
 		const repository = db.getRepository(Card)
 
 		let cards = await repository.find({
@@ -398,13 +396,19 @@ export class JobsCommand extends Subcommand {
 
 		const alteredCards: Card[] = [];
 
+		
 		for (const card of cards) {
-			if (card.jobMotivation < 7) {
-				card.jobMotivation++;
-				alteredCards.push(card);
-			} else {
-				card.jobMotivation--;
-				alteredCards.push(card);
+			if (type == "gain") {
+				if (card.jobMotivation < 7) {
+					card.jobMotivation++;
+					alteredCards.push(card);
+				}
+			}
+			else if (type == "loss") {
+				if (card.jobMotivation > 7) {
+					card.jobMotivation--;
+					alteredCards.push(card);
+				}
 			}
 		}
 
@@ -419,6 +423,40 @@ export class JobsCommand extends Subcommand {
 			})
 		}
 	}
+
+	motivationGainJob: CronJob;
+	motivationLossJob: CronJob;
+
+	private async motivationGain() {
+		this.motivationGainJob = new CronJob('* * */6 * * *', async () => {
+			try {
+			  await this.updateMotivation("gain");
+			} catch (e) {
+			  console.error(e);
+			}
+		  });
+
+		  // Start job
+		if (!this.motivationGainJob.running) {
+			this.motivationGainJob.start();
+		}
+	}
+
+	private async motivationLoss() {
+		this.motivationLossJob = new CronJob('* * */12 * * *', async () => {
+			try {
+			  await this.updateMotivation("loss");
+			} catch (e) {
+			  console.error(e);
+			}
+		  });
+
+		  // Start job
+		if (!this.motivationLossJob.running) {
+			this.motivationLossJob.start();
+		}
+	}
+
 }
 
 interface JobBoardEntry {

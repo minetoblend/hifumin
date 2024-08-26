@@ -1,12 +1,12 @@
 import {Command} from "@sapphire/framework";
 import {getTimeout, TimeoutType} from "../services/timeout.js";
 import {DiscordUserService} from "../services/discordUserService.js";
-import {EmbedAssertions, EmbedBuilder, User} from "discord.js";
+import {EmbedBuilder} from "discord.js";
 import {ItemService} from "../services/itemService.js";
 import {UserEffect} from "../entities/userEffect.js";
 import {db} from "../db.js";
 import { InventoryItem } from "../entities/inventoryItem.js";
-import { LessThan, MoreThan } from "typeorm";
+import { MoreThan } from "typeorm";
 
 export class CooldownCommand extends Command {
     public constructor(context: Command.LoaderContext, options: Command.Options) {

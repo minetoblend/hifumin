@@ -3,7 +3,10 @@ import {getTimeout, TimeoutType} from "../services/timeout.js";
 import {DiscordUserService} from "../services/discordUserService.js";
 import {EmbedBuilder} from "discord.js";
 import {ItemService} from "../services/itemService.js";
+import {UserEffect} from "../entities/userEffect.js";
 import {db} from "../db.js";
+import { InventoryItem } from "../entities/inventoryItem.js";
+import { MoreThan } from "typeorm";
 
 export class CooldownCommand extends Command {
     public constructor(context: Command.LoaderContext, options: Command.Options) {
@@ -24,33 +27,81 @@ export class CooldownCommand extends Command {
             const claimCooldown = (await getTimeout(user, TimeoutType.Claim, tx)).actualRemainingTime
             const dailyCooldown = (await getTimeout(user, TimeoutType.Daily, tx)).actualRemainingTime
 
+            console.log({ dropCooldown, claimCooldown, dailyCooldown})
             return { dropCooldown, claimCooldown, dailyCooldown}
         })
 
-        const freeClaimCount = await ItemService.getItemCount(user, 'free claim')
+        const [effects, freeClaimCount] = await Promise.all([
+            await db.getRepository(UserEffect).find({
+              where: {
+                userId: user.id,
+                activeUntil: MoreThan(new Date())
+              }
+            }),
+            ItemService.getItemCount(user, 'free claim')
+          ])
+
+        const embedBuilder = 
+            new EmbedBuilder()
+                .setTitle('Cooldowns')
+                .addFields([
+                    {
+                        name: 'Drop',
+                        value: dropCooldown <= 0 ? 'Ready to use' : this.getFormattedCooldown(dropCooldown) + ' remaining',
+                    },
+                    {
+                        name: 'Claim',
+                        value: (claimCooldown <= 0 ? 'Ready to use' : this.getFormattedCooldown(claimCooldown)) + (freeClaimCount > 0 ? ` (+${freeClaimCount} free claim${freeClaimCount > 1 ? 's' : ''})` : ''),
+                    },
+                    {
+                        name: 'Daily',
+                        value: dailyCooldown <= 0 ? 'Ready to use' : this.getFormattedCooldown(dailyCooldown) + ' remaining',
+                    }
+                ])
+        
+
+        if (effects.length > 0) {
+            for (var effect of effects) {
+                const duration: number = effect.activeUntil.getTime() - Date.now()
+                const durationValue = this.getFormattedCooldown(duration) + ' remaining'
+                
+                const name = await this.getEffectName(effect)
+                
+                embedBuilder.addFields({
+                    name: name,
+                    value: durationValue,
+                })
+            }
+        }
 
         await interaction.reply({
-            embeds: [
-                new EmbedBuilder()
-                    .setTitle('Cooldowns')
-                    .addFields([
-                        {
-                            name: 'Drop',
-                            value: dropCooldown <= 0 ? 'Ready to use' : `${dropCooldown < 60_000 ? Math.ceil(dropCooldown / 1000) + 'seconds' : Math.ceil(dropCooldown / 60_000) + 'minutes'} remaining`,
-                        },
-                        {
-                            name: 'Claim',
-                            value: (claimCooldown <= 0 ? 'Ready to use' : `${claimCooldown < 60_000 ? Math.ceil(claimCooldown / 1000) + 'seconds' : Math.ceil(claimCooldown / 60_000) + 'minutes'} remaining`) +
-                                (freeClaimCount > 0 ? ` (+${freeClaimCount} free claim${freeClaimCount > 1 ? 's' : ''})` : ''),
-                        },
-                        {
-                            name: 'Daily',
-                            value: dailyCooldown <= 0 
-                            ? 'Ready to use' 
-                            : `${dailyCooldown < (60_000 * 60) ? Math.ceil(dailyCooldown / 60_000) + ' minutes' : Math.ceil(dailyCooldown / (60_000 * 60)) + ' hours'} remaining`,
-                        }
-                    ])
-            ]
+            embeds: [embedBuilder]
         });
+    }
+
+    private async getEffectName(effect: UserEffect) {
+            switch (effect.effect) {
+                case "claim speedup": 
+                    return "Claim Speedup";
+                case "drop speedup":
+                    return "Drop Speedup";
+                default:
+                    let item = await db.getRepository(InventoryItem).findOne({
+                        where: {
+                            id: effect.effect
+                        }
+                    })
+                    return item?.name ?? effect.effect;
+            }
+    }
+
+    private getFormattedCooldown(cooldown: number) {
+        if (cooldown >= 60 * 60_000)
+            return `${Math.ceil(cooldown / (60 * 60_000))} hours`
+          
+        if (cooldown >= 60_000)
+            return `${Math.ceil(cooldown / 60_000)} minutes`
+          
+        return `${Math.ceil(cooldown / 1000)} seconds`
     }
 }

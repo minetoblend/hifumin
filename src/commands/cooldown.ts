@@ -27,6 +27,7 @@ export class CooldownCommand extends Command {
             const claimCooldown = (await getTimeout(user, TimeoutType.Claim, tx)).actualRemainingTime
             const dailyCooldown = (await getTimeout(user, TimeoutType.Daily, tx)).actualRemainingTime
 
+            console.log({ dropCooldown, claimCooldown, dailyCooldown})
             return { dropCooldown, claimCooldown, dailyCooldown}
         })
 
@@ -46,18 +47,15 @@ export class CooldownCommand extends Command {
                 .addFields([
                     {
                         name: 'Drop',
-                        value: dropCooldown <= 0 ? 'Ready to use' : `${dropCooldown < 60_000 ? Math.ceil(dropCooldown / 1000) + 'seconds' : Math.ceil(dropCooldown / 60_000) + 'minutes'} remaining`,
+                        value: dropCooldown <= 0 ? 'Ready to use' : this.getFormattedCooldown(dropCooldown) + ' remaining',
                     },
                     {
                         name: 'Claim',
-                        value: (claimCooldown <= 0 ? 'Ready to use' : `${claimCooldown < 60_000 ? Math.ceil(claimCooldown / 1000) + 'seconds' : Math.ceil(claimCooldown / 60_000) + 'minutes'} remaining`) +
-                            (freeClaimCount > 0 ? ` (+${freeClaimCount} free claim${freeClaimCount > 1 ? 's' : ''})` : ''),
+                        value: (claimCooldown <= 0 ? 'Ready to use' : this.getFormattedCooldown(claimCooldown)) + (freeClaimCount > 0 ? ` (+${freeClaimCount} free claim${freeClaimCount > 1 ? 's' : ''})` : ''),
                     },
                     {
                         name: 'Daily',
-                        value: dailyCooldown <= 0 
-                        ? 'Ready to use' 
-                        : `${dailyCooldown < (60_000 * 60) ? Math.ceil(dailyCooldown / 60_000) + ' minutes' : Math.ceil(dailyCooldown / (60_000 * 60)) + ' hours'} remaining`,
+                        value: dailyCooldown <= 0 ? 'Ready to use' : this.getFormattedCooldown(dailyCooldown) + ' remaining',
                     }
                 ])
         
@@ -65,11 +63,13 @@ export class CooldownCommand extends Command {
         if (effects.length > 0) {
             for (var effect of effects) {
                 const duration: number = effect.activeUntil.getTime() - Date.now()
+                const durationValue = this.getFormattedCooldown(duration) + ' remaining'
+                
                 const name = await this.getEffectName(effect)
                 
                 embedBuilder.addFields({
                     name: name,
-                    value: `${duration < (60_000 * 60) ? Math.ceil(duration / 60_000) + ' minutes' : Math.ceil(duration / (60_000 * 60)) + ' hours'} remaining`,
+                    value: durationValue,
                 })
             }
         }
@@ -103,5 +103,13 @@ export class CooldownCommand extends Command {
                     
             }
             return name
+    }
+
+    private getFormattedCooldown(cooldown: number) {
+        const hours = cooldown < (60_000 * 60) ? null : `${Math.ceil(cooldown / (60_000 * 60)) + ' hours'}`
+        const minutes = (hours || cooldown < 60_000) ? null : `${Math.ceil(cooldown / 60_000) + ' minutes'}`;
+        const seconds = (minutes || hours) ? null : `${Math.ceil(cooldown / 1000) + ' seconds'}`;
+
+        return `${hours ? hours : ""}` + `${minutes ? minutes : ""}` + `${seconds ? seconds : ""}`
     }
 }

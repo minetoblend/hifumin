@@ -30,14 +30,15 @@ export class CooldownCommand extends Command {
             return { dropCooldown, claimCooldown, dailyCooldown}
         })
 
-        const effects: UserEffect[] = await db.getRepository(UserEffect).find({
-            where: {
+        const [effects, freeClaimCount] = await Promise.all([
+            await db.getRepository(UserEffect).find({
+              where: {
                 userId: user.id,
                 activeUntil: MoreThan(new Date())
-            }
-        })
-
-        const freeClaimCount = await ItemService.getItemCount(user, 'free claim')
+              }
+            }),
+            ItemService.getItemCount(user, 'free claim')
+          ])
 
         const embedBuilder = 
             new EmbedBuilder()
@@ -64,24 +65,8 @@ export class CooldownCommand extends Command {
         if (effects.length > 0) {
             for (var effect of effects) {
                 const duration: number = effect.activeUntil.getTime() - Date.now()
+                const name = await this.getEffectName(effect)
                 
-                let name = "";
-                switch (effect.effect) {
-                    case "claim speedup": 
-                        name = "Claim Speedup";
-                        break;
-                    case "drop speedup":
-                        name = "Drop Speedup";
-                        break;
-                    default:
-                        let item = await db.getRepository(InventoryItem).findOne({
-                            where: {
-                                id: effect.effect
-                            }
-                        })
-                        name = item.name
-                }
-
                 embedBuilder.addFields({
                     name: name,
                     value: `${duration < (60_000 * 60) ? Math.ceil(duration / 60_000) + ' minutes' : Math.ceil(duration / (60_000 * 60)) + ' hours'} remaining`,
@@ -89,10 +74,34 @@ export class CooldownCommand extends Command {
             }
         }
 
-        const embeds = [embedBuilder]
-
         await interaction.reply({
-            embeds
+            embeds: [embedBuilder]
         });
+    }
+
+    private async getEffectName(effect: UserEffect) {
+        let name = "";
+            switch (effect.effect) {
+                case "claim speedup": 
+                    name = "Claim Speedup";
+                    break;
+                case "drop speedup":
+                    name = "Drop Speedup";
+                    break;
+                default:
+                    let item = await db.getRepository(InventoryItem).findOne({
+                        where: {
+                            id: effect.effect
+                        }
+                    })
+                    if (item) {
+                        name = item.name;
+                    }
+                    else {
+                        name = effect.effect;
+                    }
+                    
+            }
+            return name
     }
 }

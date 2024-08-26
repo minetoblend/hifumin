@@ -428,7 +428,7 @@ export class JobsCommand extends Subcommand {
 	motivationLossJob: CronJob;
 
 	private async motivationGain() {
-		this.motivationGainJob = new CronJob('* * */6 * * *', async () => {
+		this.motivationGainJob = new CronJob('0 0 */6 * * *', async () => {
 			try {
 			  await this.updateMotivation("gain");
 			} catch (e) {
@@ -443,7 +443,7 @@ export class JobsCommand extends Subcommand {
 	}
 
 	private async motivationLoss() {
-		this.motivationLossJob = new CronJob('* * */12 * * *', async () => {
+		this.motivationLossJob = new CronJob('0 0 */12 * * *', async () => {
 			try {
 			  await this.updateMotivation("loss");
 			} catch (e) {

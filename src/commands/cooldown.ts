@@ -80,36 +80,28 @@ export class CooldownCommand extends Command {
     }
 
     private async getEffectName(effect: UserEffect) {
-        let name = "";
             switch (effect.effect) {
                 case "claim speedup": 
-                    name = "Claim Speedup";
-                    break;
+                    return "Claim Speedup";
                 case "drop speedup":
-                    name = "Drop Speedup";
-                    break;
+                    return "Drop Speedup";
                 default:
                     let item = await db.getRepository(InventoryItem).findOne({
                         where: {
                             id: effect.effect
                         }
                     })
-                    if (item) {
-                        name = item.name;
-                    }
-                    else {
-                        name = effect.effect;
-                    }
-                    
+                    return item?.name ?? effect.effect;
             }
-            return name
     }
 
     private getFormattedCooldown(cooldown: number) {
-        const hours = cooldown < (60_000 * 60) ? null : `${Math.ceil(cooldown / (60_000 * 60)) + ' hours'}`
-        const minutes = (hours || cooldown < 60_000) ? null : `${Math.ceil(cooldown / 60_000) + ' minutes'}`;
-        const seconds = (minutes || hours) ? null : `${Math.ceil(cooldown / 1000) + ' seconds'}`;
-
-        return `${hours ? hours : ""}` + `${minutes ? minutes : ""}` + `${seconds ? seconds : ""}`
+        if (cooldown >= 60 * 60_000)
+            return `${Math.ceil(cooldown / (60 * 60_000))} hours`
+          
+        if (cooldown >= 60_000)
+            return `${Math.ceil(cooldown / 60_000)} minutes`
+          
+        return `${Math.ceil(cooldown / 1000)} seconds`
     }
 }

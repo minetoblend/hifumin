@@ -86,13 +86,12 @@ export class Card {
 		}[this.condition.id]!;
 	}
 
-	get attributes() {
-		const attributes: string[] = [];
-
-		if (this.foil) attributes.push('Foil');
-
-		return attributes;
-	}
+	* getAttributes(): Generator<string> {
+		if (this.foil)
+			yield 'foil'
+		if (this.jobMindblocked)
+	  		yield 'mindblocked'
+ 	 }
 
 	get jobEffort() {
 		return Math.round(

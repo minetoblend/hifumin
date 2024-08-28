@@ -115,7 +115,7 @@ export class DropCommand extends Command {
 			const buttons = cards.map((card) => {
 				let name = card.mapper.username;
 
-				if (card.attributes.length > 0) {
+				if (card.foil) {
 					name += ' (Foil)';
 				}
 

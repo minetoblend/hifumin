@@ -94,6 +94,13 @@ export class Card {
 		return attributes;
 	}
 
+	* getAttributes(): Generator<string> {
+		if (this.foil)
+			yield 'foil'
+		if (this.jobMindblocked)
+	  		yield 'mindblocked'
+ 	 }
+
 	get jobEffort() {
 		return Math.round(
 			this.jobBaseEffort * this.jobMotivation * 0.1 * (this.jobMindblocked ? 0.5 : 1)

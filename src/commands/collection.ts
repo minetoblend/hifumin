@@ -81,7 +81,10 @@ export class CollectionCommand extends Command {
 								wishlist = ` · ◆${card.mapper.wishlistEntries.length} `;
 							}
 
-							return `\`${card.id}\` · ${conditionEmoji} ${wishlist}· ${card.mapper.username} (${card.burnValue} gold)`;
+							let attributes = [...card.getAttributes()].map(it => `\`${it}\``).join(' · ')
+							attributes = attributes ? ' · ' + attributes : ''
+
+							return `\`${card.id}\` · ${conditionEmoji} ${wishlist}· ${card.mapper.username} (${card.burnValue} gold) ${attributes}`;
 						})
 						.join('\n') + `\n\nSorting by: \`${orderByReadable}\``
 				);

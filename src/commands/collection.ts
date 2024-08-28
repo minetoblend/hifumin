@@ -84,7 +84,7 @@ export class CollectionCommand extends Command {
 							let attributes = [...card.getAttributes()].map(it => `\`${it}\``).join(' · ')
 							attributes = attributes ? ' · ' + attributes : ''
 
-							return `\`${card.id}\` · ${conditionEmoji} ${wishlist}· ${card.mapper.username} (${card.burnValue} gold) ${attributes}`;
+							return `\`${card.id}\` · ${conditionEmoji} ${wishlist}· ${card.mapper.username} (${card.burnValue} gold)${attributes}`;
 						})
 						.join('\n') + `\n\nSorting by: \`${orderByReadable}\``
 				);

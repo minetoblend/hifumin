@@ -58,6 +58,8 @@ export class CollectionCommand extends Command {
 				const embed = new EmbedBuilder().setTitle(`Card collection for ${user.username}`).setDescription(
 					cards
 						.map((card) => {
+							let username = card.mapper.username.replaceAll('_', '\\_')
+
 							let conditionEmoji: string;
 
 							switch (card.condition.id) {
@@ -84,7 +86,7 @@ export class CollectionCommand extends Command {
 							let attributes = [...card.getAttributes()].map(it => `\`${it}\``).join(' · ')
 							attributes = attributes ? ' · ' + attributes : ''
 
-							return `\`${card.id}\` · ${conditionEmoji} ${wishlist}· ${card.mapper.username} (${card.burnValue} gold)${attributes}`;
+							return `\`${card.id}\` · ${conditionEmoji} ${wishlist}· ${username} (${card.burnValue} gold)${attributes}`;
 						})
 						.join('\n') + `\n\nSorting by: \`${orderByReadable}\``
 				);

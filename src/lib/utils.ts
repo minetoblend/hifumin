@@ -51,3 +51,19 @@ function getGuildInfo(guild: Guild | null, channel: | Channel | null) {
 
 	return text
 }
+
+export function stringId(id: number) {
+	let stringId = '';
+	const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+	const is5Digit = id >= 36 ** 4;
+	const length = is5Digit ? 5 : 4;
+	if (is5Digit) id -= 36 ** 4;
+
+	for (let i = 0; i < length; i++) {
+		stringId += chars[id % chars.length];
+		id = Math.floor(id / chars.length);
+	}
+
+	return stringId.split('').reverse().join('');
+}

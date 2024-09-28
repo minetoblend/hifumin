@@ -5,7 +5,7 @@ import { CardCondition } from './cardCondition.js';
 
 @Entity('card')
 export class Card {
-	@PrimaryColumn('char', { length: 4 })
+	@PrimaryColumn('char', { length: 5 })
 	id!: string;
 
 	@ManyToOne(() => Mapper, { eager: false, nullable: false })

@@ -61,6 +61,9 @@ export class Card {
 	@Column('datetime', { name: 'job_mindblocked_until', nullable: true })
 	jobMindblockedUntil!: Date | null;
 
+	@Column('int', { name: 'pity', default: 0, nullable: false })
+	pity!: number;
+
 	@BeforeInsert()
 	@BeforeUpdate()
 	calculateBurnValue() {

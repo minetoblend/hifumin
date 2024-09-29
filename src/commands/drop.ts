@@ -13,6 +13,7 @@ import { getNextCardId } from '../services/getNextCardId.js';
 import { GuildSettings } from '../entities/guildSettings.js';
 import { EventLogService } from '../services/eventLogService.js';
 import { unlink } from 'fs/promises';
+import { stringId } from '../lib/utils.js';
 
 @ApplyOptions<Command.Options>({
 	description: 'Drops 3 cards'
@@ -203,16 +204,4 @@ export class DropCommand extends Command {
 			console.error('Failed to post settings hint', e);
 		}
 	}
-}
-
-function stringId(id: number) {
-	let stringId = '';
-	const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-
-	for (let i = 0; i < 4; i++) {
-		stringId += chars[id % chars.length];
-		id = Math.floor(id / chars.length);
-	}
-
-	return stringId.split('').reverse().join('');
 }

@@ -12,6 +12,7 @@ import { DiscordUser } from '../entities/discordUser.js';
 import { getNextCardId } from '../services/getNextCardId.js';
 import { EventLogService } from '../services/eventLogService.js';
 import { unlink } from 'fs/promises';
+import { stringId } from '../lib/utils.js';
 
 export class UseCommand extends Command {
 	registerApplicationCommands(registry: ApplicationCommandRegistry) {
@@ -191,16 +192,4 @@ export class UseCommand extends Command {
             } catch(e) {}
 		}, 1000 * 60);
 	}
-}
-
-function stringId(id: number) {
-	let stringId = '';
-	const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-
-	for (let i = 0; i < 4; i++) {
-		stringId += chars[id % chars.length];
-		id = Math.floor(id / chars.length);
-	}
-
-	return stringId.split('').reverse().join('');
 }

@@ -21,13 +21,6 @@ export class ViewCommand extends Command {
   public override async chatInputRun(interaction: Command.ChatInputCommandInteraction) {
     const id = interaction.options.getString('card')!
 
-    if(id.length != 4) {
-      await interaction.reply({
-        content: 'Invalid card code',
-        ephemeral: true
-      })
-      return;
-    }
 
     const card = await db
         .getRepository(Card)

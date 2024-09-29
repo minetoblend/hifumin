@@ -51,7 +51,7 @@ export class JobsCommand extends Subcommand {
 						.setName('assign')
 						.setDescription('Assign card to slot')
 						.addStringOption((arg) =>
-							arg.setName('card').setDescription('Card to assign').setRequired(true).setMaxLength(4).setMinLength(4)
+							arg.setName('card').setDescription('Card to assign').setRequired(true).setMaxLength(5).setMinLength(4)
 						)
 						.addStringOption((arg) =>
 							arg

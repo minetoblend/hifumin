@@ -25,6 +25,8 @@ export class ButtonHandler extends InteractionHandler {
 	public async run(interaction: ButtonInteraction, id: string) {
 		const user = await DiscordUserService.findOrCreate(interaction.user);
 
+		const response = await interaction.deferReply()
+		
 		await db.transaction(async (tx) => {
 			const ratelimit = await getTimeout(user, TimeoutType.Claim, tx);
 			if (ratelimit.expired) {
@@ -32,7 +34,7 @@ export class ButtonHandler extends InteractionHandler {
 					ratelimit.remainingTime > 60_000
 						? `${Math.ceil(ratelimit.remainingTime / 60_000)} minutes`
 						: `${Math.round(ratelimit.remainingTime / 1000)} seconds`;
-				await interaction.reply({
+				await response.edit({
 					content: `<@${user.id}> You need to wait ${duration} before claiming another card!`
 				});
 				return;
@@ -54,7 +56,7 @@ export class ButtonHandler extends InteractionHandler {
 			});
 
 			if (!card) {
-				await interaction.reply({
+				await response.edit({
 					content: 'Card not found',
 					ephemeral: true
 				});
@@ -63,14 +65,14 @@ export class ButtonHandler extends InteractionHandler {
 
 			const age = Date.now() - card.createdAt.getTime();
 			if (age > 1000 * 60) {
-				await interaction.reply({
+				await response.edit({
 					content: 'This card has expired!'
 				});
 				return;
 			}
 
 			if (card.owner && card.owner.id === user.id) {
-				await interaction.reply({
+				await response.edit({
 					content: `<@${user.id}> You already own this card!`
 				});
 			} else if (card.owner && card.droppedBy?.id === user.id) {
@@ -91,18 +93,18 @@ export class ButtonHandler extends InteractionHandler {
                         }
                     })
 
-					await interaction.reply({
+					await response.edit({
 						content: `<@${user.id}> You fought <@${card.owner!!.id}> for this card and came out on top!`
 					});
 					await ratelimit.consume();
 				} else {
-					await interaction.reply({
+					await response.edit({
 						content: `<@${user.id}> You fought <@${card.owner!!.id}> for this card but unfortunately lost!`
 					});
 					await ratelimit.consume();
 				}
 			} else if (card.owner) {
-				await interaction.reply({
+				await response.edit({
 					content: `<@${user.id}> This card is already claimed!`
 				});
 			} else {
@@ -136,7 +138,7 @@ export class ButtonHandler extends InteractionHandler {
 
 				await ratelimit.consume();
 
-				await interaction.reply({
+				await response.edit({
 					content: `<@${user.id}> You claimed the *${card.mapper.username}* card \`${card.id}\`! ${conditionText}`
 				});
 			}

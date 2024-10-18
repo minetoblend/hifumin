@@ -58,7 +58,6 @@ export class ButtonHandler extends InteractionHandler {
 			if (!card) {
 				await response.edit({
 					content: 'Card not found',
-					ephemeral: true
 				});
 				return;
 			}

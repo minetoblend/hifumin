@@ -28,6 +28,8 @@ export class DropCommand extends Command {
 	}
 
 	override async chatInputRun(interaction: ChatInputCommandInteraction) {
+    const response = await interaction.deferReply();
+
 		const user = await DiscordUserService.findOrCreate(interaction.user);
 
 		const isTestChannel = interaction.channelId === '1206534692761894953';
@@ -45,8 +47,6 @@ export class DropCommand extends Command {
 			.getMany();
 
 		const ids = await getNextCardId(count);
-
-		const response = await interaction.deferReply();
 
 		const cardResponse = await db.transaction(async (tx) => {
 			const ratelimit = await getTimeout(user, TimeoutType.Drop, tx);

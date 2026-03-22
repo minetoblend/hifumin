@@ -37,18 +37,18 @@ const main = async () => {
 };
 
 async function logMetrics() {
-    const numCards = await db.getRepository(Card).count()
-    const numCardsBurned = await db.getRepository(Card).countBy({ burned: true })
-    const numCardsOwned = await db.getRepository(Card).countBy({ burned: false, owner: Not(IsNull()) })
-    const numUsers = await db.getRepository(DiscordUser).count()
-
-    console.log(JSON.stringify({
-        timestamp: Date.now(),
-        cards_total: numCards,
-        cards_total_burned: numCardsBurned,
-        cards_total_owned: numCardsOwned,
-        users_total: numUsers,
-    }))
+    // const numCards = await db.getRepository(Card).count()
+    // const numCardsBurned = await db.getRepository(Card).countBy({ burned: true })
+    // const numCardsOwned = await db.getRepository(Card).countBy({ burned: false, owner: Not(IsNull()) })
+    // const numUsers = await db.getRepository(DiscordUser).count()
+    //
+    // console.log(JSON.stringify({
+    //     timestamp: Date.now(),
+    //     cards_total: numCards,
+    //     cards_total_burned: numCardsBurned,
+    //     cards_total_owned: numCardsOwned,
+    //     users_total: numUsers,
+    // }))
 }
 
 void main();

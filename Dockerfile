@@ -1,6 +1,7 @@
 FROM node:25.8.1-alpine
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+RUN npm install -g corepack@latest
 RUN corepack enable
 
 RUN apk add --update --no-cache \

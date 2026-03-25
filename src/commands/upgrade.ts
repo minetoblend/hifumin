@@ -75,6 +75,9 @@ export class UpgradeCommand extends Command {
         }
 
         const upgradePrice = condition.upgradePrice * (card.foil ? 2 : 1);
+        const pityFactor = 0.07 * card.pity;
+        const upgradeChance = Math.min(card.condition.upgradeChance + pityFactor, .8);
+        const downgradeChance = Math.max(0.5 - pityFactor, 0.3)
 
         const imagePath = await renderCard(card, {cardCode: true})
 
@@ -85,8 +88,8 @@ export class UpgradeCommand extends Command {
             .setTitle('Upgrade card')
             .setThumbnail('attachment://card.png')
             .setDescription([
-                `Upgrading the \`${card.mapper.username}\` card from from **${condition.id}** to **${condition.nextUpgrade.id}** has a ${Math.floor(condition.upgradeChance * 100)}% chance of success.`,
-                condition.previousUpgrade ? `If the upgrade fails, there is a 50% chance the card will be downgraded to **${condition.previousUpgrade.id}**` : `If the upgrade fails, nothing will happen.`,
+                `Upgrading the \`${card.mapper.username}\` card from from **${condition.id}** to **${condition.nextUpgrade.id}** has a ${Math.floor(upgradeChance * 100)}% chance of success.`,
+                condition.previousUpgrade ? `If the upgrade fails, there is a ${Math.floor(downgradeChance * 100)}% chance the card will be downgraded to **${condition.previousUpgrade.id}**` : `If the upgrade fails, nothing will happen.`,
                 '',
                 'Attempting to upgrade will cost',
                 '```diff',
@@ -176,13 +179,14 @@ export class UpgradeCommand extends Command {
                 }
 
                 const random = Math.random();
-                const success = random < condition.upgradeChance;
-                const downgrade = !success && Math.random() < 0.5;
+                const success = random < upgradeChance;
+                const downgrade = !success && Math.random() < downgradeChance;
                 if (success) {
                     currentCard.condition = condition.nextUpgrade;
                 } else {
                     if (condition.previousUpgrade && downgrade) {
                         currentCard.condition = condition.previousUpgrade;
+                        currentCard.pity++;
                     }
                 }
 
@@ -208,7 +212,7 @@ export class UpgradeCommand extends Command {
                 } else {
                     await response.update({
                         embeds: [
-                            embed.setFooter({text: 'Upgrade failed' + (downgrade && condition.previousUpgrade ? '. Card is now `' + condition.previousUpgrade.id + '`' : '') ,})
+                            embed.setFooter({text: 'Upgrade failed' + (downgrade && condition.previousUpgrade ? '. Card is now `' + condition.previousUpgrade.id + '`' + '\n' + 'Your chances for future upgrades improved a little..': '') ,})
                                 .setColor('Red')
                         ],
                         components: []
